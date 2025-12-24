@@ -97,19 +97,23 @@ export default function Footer({ layoutData }: FooterProps) {
         <div className="grid md:grid-cols-4 gap-12 mb-16">
           {/* Logo and Description */}
           <div className="col-span-1 md:col-span-2">
-            <div className="font-tech font-bold text-2xl tracking-tighter text-white flex items-center gap-2 mb-6">
+            <div className="mb-6">
               {logoUrl ? (
+                // When logo exists in Strapi, show only the image (replaces text)
                 <Image
                   src={logoUrl}
                   alt={logoAlt}
-                  width={24}
-                  height={24}
-                  className="w-6 h-6 object-contain"
+                  width={140}
+                  height={35}
+                  className="h-9 w-auto object-contain"
                 />
               ) : (
-                <span className="w-3 h-3 bg-ufam-primary rounded-full"></span>
+                // Fallback: icon + text
+                <div className="font-tech font-bold text-2xl tracking-tighter text-white flex items-center gap-2">
+                  <span className="w-3 h-3 bg-ufam-primary rounded-full"></span>
+                  {groupName}
+                </div>
               )}
-              {groupName}
             </div>
             <p className="text-ufam-secondary max-w-sm mb-6">
               {department}

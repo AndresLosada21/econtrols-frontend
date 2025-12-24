@@ -39,27 +39,31 @@ export default function Header({ layoutData }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Logo component - uses image from Strapi or fallback to CSS logo
+  // Logo component - uses image from Strapi (replaces text) or fallback to CSS logo + text
   const Logo = () => (
     <Link
       href="/"
       className="font-tech font-bold text-xl tracking-widest text-white flex items-center gap-2"
     >
       {logoUrl ? (
+        // When logo exists in Strapi, show only the image (replaces text)
         <Image
           src={logoUrl}
           alt={logoAlt}
-          width={32}
-          height={32}
-          className="w-8 h-8 object-contain"
+          width={160}
+          height={40}
+          className="h-10 w-auto object-contain"
         />
       ) : (
-        <div className="relative w-8 h-8 flex items-center justify-center">
-          <span className="absolute w-full h-full border-2 border-ufam-primary rounded-r-lg border-l-0"></span>
-          <span className="w-2 h-2 bg-ufam-secondary rounded-full absolute left-0"></span>
-        </div>
+        // Fallback: CSS icon + text
+        <>
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <span className="absolute w-full h-full border-2 border-ufam-primary rounded-r-lg border-l-0"></span>
+            <span className="w-2 h-2 bg-ufam-secondary rounded-full absolute left-0"></span>
+          </div>
+          {groupName}
+        </>
       )}
-      {groupName}
     </Link>
   );
 
