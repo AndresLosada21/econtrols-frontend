@@ -5,11 +5,22 @@ import {
   getHomepageFacultyMembers,
   getHomepageProjects,
   getHomepageAlumni,
+  getFeaturedPublications,
 } from '@/lib/strapi';
-import type { ResearchLineFlat, FacultyMemberFlat, ProjectFlat, AlumnusFlat } from '@/types/strapi';
+import type {
+  ResearchLineFlat,
+  FacultyMemberFlat,
+  ProjectFlat,
+  AlumnusFlat,
+  PublicationFlat,
+} from '@/types/strapi';
 import Hero from '@/components/sections/Hero';
 import ResearchLines from '@/components/sections/ResearchLines';
 import { FadeIn } from '@/components/effects/FadeIn';
+import FacultyCard from '@/components/cards/FacultyCard';
+import ProjectCard from '@/components/cards/ProjectCard';
+import PublicationCard from '@/components/cards/PublicationCard';
+import { AnimatedCounter } from '@/components/effects/AnimatedCounter';
 
 export default async function Home() {
   // Fetch data from Strapi
@@ -17,13 +28,15 @@ export default async function Home() {
   let facultyMembers: FacultyMemberFlat[] = [];
   let projects: ProjectFlat[] = [];
   let alumni: AlumnusFlat[] = [];
+  let publications: PublicationFlat[] = [];
 
   try {
-    [researchLines, facultyMembers, projects, alumni] = await Promise.all([
+    [researchLines, facultyMembers, projects, alumni, publications] = await Promise.all([
       getResearchLines(),
       getHomepageFacultyMembers(),
       getHomepageProjects(),
       getHomepageAlumni(),
+      getFeaturedPublications(),
     ]);
   } catch (error) {
     console.error('Error fetching data from Strapi:', error);
@@ -65,36 +78,47 @@ export default async function Home() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <FadeIn delay={0} className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech">
-                200+
-              </div>
-              <p className="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech">
-                publicações
-              </p>
+              <AnimatedCounter
+                end={200}
+                suffix="+"
+                duration={2000}
+                className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech"
+                label="publicações"
+                labelClassName="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech"
+              />
             </FadeIn>
             <FadeIn delay={100} className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech">
-                450+
-              </div>
-              <p className="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech">
-                citações
-              </p>
+              <AnimatedCounter
+                end={450}
+                suffix="+"
+                duration={2000}
+                delay={200}
+                className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech"
+                label="citações"
+                labelClassName="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech"
+              />
             </FadeIn>
             <FadeIn delay={200} className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech">
-                25+
-              </div>
-              <p className="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech">
-                mestres formados
-              </p>
+              <AnimatedCounter
+                end={25}
+                suffix="+"
+                duration={2000}
+                delay={400}
+                className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech"
+                label="mestres formados"
+                labelClassName="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech"
+              />
             </FadeIn>
             <FadeIn delay={300} className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech">
-                6+
-              </div>
-              <p className="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech">
-                parcerias internac.
-              </p>
+              <AnimatedCounter
+                end={6}
+                suffix="+"
+                duration={2000}
+                delay={600}
+                className="text-4xl md:text-5xl font-black text-ufam-primary mb-2 font-tech"
+                label="parcerias internac."
+                labelClassName="text-ufam-secondary text-xs md:text-sm font-medium lowercase tracking-wider font-tech"
+              />
             </FadeIn>
           </div>
         </div>
@@ -103,7 +127,7 @@ export default async function Home() {
       {/* Research Lines with Horizontal Scroll */}
       <ResearchLines researchLines={researchLines} />
 
-      {/* Projects Preview */}
+      {/* Projects Section - Issue #62 */}
       <section className="py-24 bg-ufam-dark border-t border-white/5 relative z-10">
         <div className="container mx-auto px-6">
           <FadeIn className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
@@ -114,6 +138,9 @@ export default async function Home() {
               <h3 className="text-3xl md:text-4xl font-bold text-white font-tech">
                 Pesquisa & Desenvolvimento
               </h3>
+              <p className="text-ufam-secondary mt-2 max-w-xl">
+                Projetos de pesquisa financiados por agências nacionais e internacionais.
+              </p>
             </div>
             <Link
               href="/projects"
@@ -126,28 +153,9 @@ export default async function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.length > 0 ? (
-              projects.slice(0, 3).map((project, index) => (
+              projects.slice(0, 6).map((project, index) => (
                 <FadeIn key={project.id} delay={index * 100}>
-                  <div className="bg-ufam-bg border border-white/10 p-6 rounded hover:border-ufam-primary/50 transition-all group h-full">
-                    <span
-                      className={`text-xs font-tech px-2 py-1 rounded mb-4 inline-block ${
-                        project.status === 'active'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-gray-500/20 text-gray-400'
-                      }`}
-                    >
-                      {project.status === 'active' ? 'em andamento' : 'concluído'}
-                    </span>
-                    <h4 className="text-lg font-bold text-white mb-3 group-hover:text-ufam-light transition-colors font-tech">
-                      {project.title}
-                    </h4>
-                    <p className="text-ufam-secondary text-sm mb-4">{project.shortDescription}</p>
-                    {project.fundingAgency && (
-                      <p className="text-xs text-ufam-light font-tech lowercase">
-                        {project.fundingAgency}
-                      </p>
-                    )}
-                  </div>
+                  <ProjectCard project={project} index={index} />
                 </FadeIn>
               ))
             ) : (
@@ -159,7 +167,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Team Preview */}
+      {/* Team Section - Issue #61 */}
       <section className="py-24 relative z-10">
         <div className="container mx-auto px-6">
           <FadeIn className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
@@ -170,6 +178,9 @@ export default async function Home() {
               <h3 className="text-3xl md:text-4xl font-bold text-white font-tech">
                 Liderança Acadêmica
               </h3>
+              <p className="text-ufam-secondary mt-2 max-w-xl">
+                Pesquisadores com formação em universidades de excelência mundial.
+              </p>
             </div>
             <Link
               href="/people"
@@ -184,35 +195,7 @@ export default async function Home() {
             {facultyMembers.length > 0 ? (
               facultyMembers.slice(0, 4).map((member, index) => (
                 <FadeIn key={member.id} delay={index * 100}>
-                  <Link href={`/people/${member.id}`} className="group text-center block">
-                    <div className="relative overflow-hidden rounded-lg mb-4 bg-gray-800 aspect-[3/4] border-b-2 border-ufam-primary">
-                      {member.photoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={member.photoUrl}
-                          alt={member.displayName}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-ufam-primary/20 to-ufam-dark">
-                          <span className="text-4xl font-tech text-ufam-primary/50">
-                            {member.displayName.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-ufam-primary/80 to-transparent p-4">
-                        <span className="text-white font-tech text-xs bg-black/50 px-2 py-1 rounded backdrop-blur border border-white/20 lowercase">
-                          {member.role}
-                        </span>
-                      </div>
-                    </div>
-                    <h4 className="text-lg font-bold text-white group-hover:text-ufam-light transition-colors font-tech">
-                      {member.displayName}
-                    </h4>
-                    {member.specializationAreas && member.specializationAreas.length > 0 && (
-                      <p className="text-ufam-secondary text-sm">{member.specializationAreas[0]}</p>
-                    )}
-                  </Link>
+                  <FacultyCard member={member} index={index} />
                 </FadeIn>
               ))
             ) : (
@@ -317,7 +300,7 @@ export default async function Home() {
       </section>
 
       {/* Partners Preview */}
-      <section className="py-24 bg-ufam-dark border-t border-white/5 relative z-10">
+      <section className="py-24 relative z-10">
         <div className="container mx-auto px-6">
           <FadeIn className="text-center mb-12">
             <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
@@ -339,7 +322,7 @@ export default async function Home() {
             {['Oxford', 'Cambridge', 'Manchester', 'TU Delft', 'INRIA'].map((partner) => (
               <div
                 key={partner}
-                className="text-white/50 font-tech text-lg hover:text-white transition-colors"
+                className="text-white/50 font-tech text-lg hover:text-white transition-colors cursor-pointer"
               >
                 {partner}
               </div>
@@ -354,6 +337,58 @@ export default async function Home() {
               ver todos os parceiros
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* Publications Section - Issue #63 */}
+      <section className="py-24 bg-ufam-dark border-t border-white/5 relative z-10">
+        <div className="container mx-auto px-6">
+          <FadeIn className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+            <div>
+              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
+                {'/// publicações'}
+              </h2>
+              <h3 className="text-3xl md:text-4xl font-bold text-white font-tech">
+                Produção Científica
+              </h3>
+              <p className="text-ufam-secondary mt-2 max-w-xl">
+                Artigos publicados em periódicos e conferências de alto impacto.
+              </p>
+            </div>
+            <Link
+              href="/publications"
+              className="group inline-flex items-center gap-2 text-ufam-primary font-tech text-sm hover:text-ufam-light transition-colors lowercase"
+            >
+              ver todas as publicações
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </FadeIn>
+
+          <div className="space-y-4">
+            {publications.length > 0 ? (
+              publications.slice(0, 5).map((publication, index) => (
+                <FadeIn key={publication.id} delay={index * 100}>
+                  <PublicationCard publication={publication} index={index} />
+                </FadeIn>
+              ))
+            ) : (
+              <FadeIn className="text-center py-12">
+                <p className="text-ufam-secondary">Conecte ao Strapi para ver as publicações.</p>
+              </FadeIn>
+            )}
+          </div>
+
+          {/* Google Scholar Link */}
+          <FadeIn delay={600} className="text-center mt-8">
+            <a
+              href="https://scholar.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-tech text-ufam-secondary hover:text-white border-b border-transparent hover:border-ufam-primary transition-all lowercase"
+            >
+              ver todas no google scholar →
+            </a>
           </FadeIn>
         </div>
       </section>
@@ -381,33 +416,6 @@ export default async function Home() {
 
           <FadeIn className="text-center py-12 text-ufam-secondary">
             <p>Conecte ao Strapi para ver as notícias.</p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Publications Preview */}
-      <section className="py-24 bg-ufam-dark border-t border-white/5 relative z-10">
-        <div className="container mx-auto px-6">
-          <FadeIn className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
-            <div>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// publicações'}
-              </h2>
-              <h3 className="text-3xl md:text-4xl font-bold text-white font-tech">
-                Produção Científica
-              </h3>
-            </div>
-            <Link
-              href="/publications"
-              className="group inline-flex items-center gap-2 text-ufam-primary font-tech text-sm hover:text-ufam-light transition-colors lowercase"
-            >
-              ver todas as publicações
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </FadeIn>
-
-          <FadeIn className="text-center py-12 text-ufam-secondary">
-            <p>Conecte ao Strapi para ver as publicações.</p>
           </FadeIn>
         </div>
       </section>
