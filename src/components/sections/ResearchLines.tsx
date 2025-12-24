@@ -1,82 +1,141 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Settings, Activity, Zap, Code2, Cpu } from 'lucide-react';
+import { ArrowRight, Settings, Activity, Zap, Code2, Cpu, Brain, Shield } from 'lucide-react';
 import type { ResearchLineFlat } from '@/types/strapi';
 
-// Icon mapping for research lines
+// Icon mapping for research lines (fallback when no image)
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   settings: Settings,
   activity: Activity,
   zap: Zap,
   'code-2': Code2,
+  code: Code2,
   cpu: Cpu,
+  brain: Brain,
+  shield: Shield,
 };
 
+// Default icons based on keywords in title (smart fallback)
+function getDefaultIcon(title: string): React.ComponentType<{ className?: string }> {
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes('controle')) return Settings;
+  if (titleLower.includes('verificação') || titleLower.includes('formal')) return Code2;
+  if (titleLower.includes('potência') || titleLower.includes('energia')) return Zap;
+  if (titleLower.includes('robótica') || titleLower.includes('indústria')) return Cpu;
+  if (titleLower.includes('detecção') || titleLower.includes('diagnóstico')) return Activity;
+  if (titleLower.includes('inteligência') || titleLower.includes('neural')) return Brain;
+  if (titleLower.includes('segurança') || titleLower.includes('cyber')) return Shield;
+  return Settings;
+}
+
 // Fallback data when Strapi is not available
-const fallbackResearchLines = [
+const fallbackResearchLines: ResearchLineFlat[] = [
   {
     id: 1,
     title: 'Teoria de Controle Avançado',
+    slug: 'controle-avancado',
     shortDescription: 'Controle robusto, LMI, fault-tolerant control e ocultação de falhas.',
-    icon: 'settings',
+    category: 'Principal',
+    iconName: 'settings',
+    isActive: true,
   },
   {
     id: 2,
     title: 'Detecção e Diagnóstico',
+    slug: 'deteccao-diagnostico',
     shortDescription: 'Supervisão de processos industriais e monitoramento em tempo real.',
-    icon: 'activity',
+    category: 'Principal',
+    iconName: 'activity',
+    isActive: true,
   },
   {
     id: 3,
     title: 'Eletrônica de Potência',
+    slug: 'eletronica-potencia',
     shortDescription: 'Conversores CC-CC, sistemas fotovoltaicos e cargas de potência constante.',
-    icon: 'zap',
+    category: 'Principal',
+    iconName: 'zap',
+    isActive: true,
   },
   {
     id: 4,
     title: 'Verificação Formal',
+    slug: 'verificacao-formal',
     shortDescription: 'Model checking, verificação de redes neurais e ferramenta ESBMC.',
-    icon: 'code-2',
+    category: 'Principal',
+    iconName: 'code-2',
+    isActive: true,
   },
   {
     id: 5,
     title: 'Robótica e Indústria 4.0',
+    slug: 'robotica-industria',
     shortDescription: 'VANTs, Digital Twins, Asset Administration Shell e IoT Industrial.',
-    icon: 'cpu',
+    category: 'Principal',
+    iconName: 'cpu',
+    isActive: true,
   },
 ];
 
 interface ResearchCardProps {
   title: string;
   description: string;
-  icon?: string;
+  imageUrl?: string;
+  iconName?: string;
   index: number;
 }
 
-function ResearchCard({ title, description, icon, index }: ResearchCardProps) {
-  const IconComponent = icon ? iconMap[icon] || Settings : Settings;
+function ResearchCard({ title, description, imageUrl, iconName, index }: ResearchCardProps) {
+  // Determine icon: use iconName if provided, otherwise smart fallback based on title
+  const IconComponent = iconName
+    ? iconMap[iconName] || getDefaultIcon(title)
+    : getDefaultIcon(title);
 
   return (
-    <div className="w-[85vw] md:w-[500px] h-[50vh] bg-ufam-dark border border-white/10 p-8 relative flex flex-col justify-end hover:border-ufam-primary/50 transition-all group shrink-0">
-      {/* Background Icon */}
-      <div className="absolute top-8 right-8 text-white/10 group-hover:text-ufam-primary/20 transition-colors">
-        <IconComponent className="w-16 h-16" />
-      </div>
+    <div className="w-[85vw] md:w-[500px] h-[50vh] bg-ufam-dark border border-white/10 relative flex flex-col justify-end hover:border-ufam-primary/50 transition-all group shrink-0 overflow-hidden">
+      {/* Background: Image or Icon */}
+      {imageUrl ? (
+        <>
+          {/* Background Image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500"
+          />
+          {/* Gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-ufam-dark via-ufam-dark/80 to-transparent" />
+        </>
+      ) : (
+        /* Fallback: Icon in background */
+        <div className="absolute top-8 right-8 text-white/10 group-hover:text-ufam-primary/20 transition-colors">
+          <IconComponent className="w-16 h-16" />
+        </div>
+      )}
 
       {/* Content */}
-      <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-ufam-light transition-colors font-tech">
-        {title}
-      </h3>
-      <p className="text-ufam-secondary text-sm mb-4 leading-relaxed">{description}</p>
+      <div className="relative z-10 p-8">
+        {/* Small icon indicator when image is present */}
+        {imageUrl && (
+          <div className="mb-4 text-ufam-primary/60 group-hover:text-ufam-primary transition-colors">
+            <IconComponent className="w-8 h-8" />
+          </div>
+        )}
 
-      {/* Divider */}
-      <div className="w-full h-[1px] bg-white/10 mb-4" />
+        <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-ufam-light transition-colors font-tech">
+          {title}
+        </h3>
+        <p className="text-ufam-secondary text-sm mb-4 leading-relaxed">{description}</p>
 
-      {/* Area number */}
-      <span className="text-xs font-tech text-ufam-secondary lowercase">
-        area #{String(index + 1).padStart(2, '0')}
-      </span>
+        {/* Divider */}
+        <div className="w-full h-[1px] bg-white/10 mb-4" />
+
+        {/* Area number */}
+        <span className="text-xs font-tech text-ufam-secondary lowercase">
+          area #{String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
     </div>
   );
 }
@@ -91,6 +150,7 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Use Strapi data if available, otherwise fallback
   const lines = researchLines?.length ? researchLines : fallbackResearchLines;
 
   useEffect(() => {
@@ -162,7 +222,8 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
               key={line.id}
               title={line.title}
               description={line.shortDescription || ''}
-              icon={line.icon}
+              imageUrl={line.imageUrl}
+              iconName={line.iconName || line.icon}
               index={index}
             />
           ))}

@@ -96,9 +96,11 @@ export interface ResearchLineAttributes {
   fullDescription?: string;
   category: 'Principal' | 'Secundária' | 'Emergente';
   icon?: string;
+  iconName?: string; // Nome do ícone Lucide como fallback (ex: "settings", "cpu")
   isActive: boolean;
   displayOrder?: number;
   image?: StrapiMedia;
+  featuredImage?: StrapiMedia;
   facultyMembers?: StrapiResponse<StrapiData<FacultyMemberAttributes>[]>;
   projects?: StrapiResponse<StrapiData<ProjectAttributes>[]>;
   createdAt: string;
@@ -361,6 +363,7 @@ export interface ResearchLineFlat {
   fullDescription?: string;
   category: string;
   icon?: string;
+  iconName?: string;
   isActive: boolean;
   displayOrder?: number;
   imageUrl?: string;

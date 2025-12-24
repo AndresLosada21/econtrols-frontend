@@ -123,6 +123,11 @@ export function flattenFacultyMember(data: StrapiData<FacultyMemberAttributes>):
 
 export function flattenResearchLine(data: StrapiData<ResearchLineAttributes>): ResearchLineFlat {
   const { id, attributes } = data;
+  // Suporta tanto 'image' quanto 'featuredImage' do Strapi
+  const imageUrl =
+    getStrapiMediaUrl(attributes.featuredImage?.data?.attributes?.url) ||
+    getStrapiMediaUrl(attributes.image?.data?.attributes?.url);
+
   return {
     id,
     title: attributes.title,
@@ -131,9 +136,10 @@ export function flattenResearchLine(data: StrapiData<ResearchLineAttributes>): R
     fullDescription: attributes.fullDescription,
     category: attributes.category,
     icon: attributes.icon,
+    iconName: attributes.iconName,
     isActive: attributes.isActive,
     displayOrder: attributes.displayOrder,
-    imageUrl: getStrapiMediaUrl(attributes.image?.data?.attributes?.url),
+    imageUrl,
   };
 }
 
@@ -271,7 +277,7 @@ export async function getResearchLines(options: FetchOptions = {}): Promise<Rese
   const response = await fetchAPI<StrapiResponse<StrapiData<ResearchLineAttributes>[]>>(
     'research-lines',
     {
-      populate: ['image'],
+      populate: ['image', 'featuredImage', 'icon'],
       sort: ['displayOrder:asc', 'title:asc'],
       filters: { isActive: { $eq: true } },
       ...options,
@@ -285,7 +291,7 @@ export async function getResearchLineBySlug(slug: string): Promise<ResearchLineF
     'research-lines',
     {
       filters: { slug: { $eq: slug } },
-      populate: ['image', 'facultyMembers', 'projects'],
+      populate: ['image', 'featuredImage', 'icon', 'facultyMembers', 'projects'],
     }
   );
   if (response.data.length === 0) return null;
