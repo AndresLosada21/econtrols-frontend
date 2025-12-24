@@ -22,6 +22,7 @@ import type {
   SoftwareToolFlat,
   PartnerFlat,
   AlumnusFlat,
+  LayoutData,
 } from '@/types/strapi';
 
 // ============================================
@@ -558,5 +559,74 @@ export async function getHomepageSettings(): Promise<HomepageSettingAttributes |
   } catch (error) {
     console.error('Error fetching homepage settings:', error);
     return null;
+  }
+}
+
+// ============================================
+// API Functions - Layout Data (Header/Footer)
+// ============================================
+
+export async function getLayoutData(): Promise<LayoutData> {
+  // Default values for fallback
+  const defaults: LayoutData = {
+    groupName: 'e-Controls',
+    tagline: 'Excelência em Controle de Sistemas na Amazônia',
+    department: 'Departamento de Eletricidade - Faculdade de Tecnologia',
+    institutionalAffiliation: 'Universidade Federal do Amazonas (UFAM)',
+    mainContactEmail: 'iurybessa@ufam.edu.br',
+    phone: '+55 92 3305-1181',
+    address: 'Av. General Rodrigo Otávio, 6200, Coroado I, Manaus - AM, CEP: 69077-000',
+    logoUrl: undefined,
+    logoAlt: 'e-Controls Logo',
+    mainMenu: [
+      { id: 1, order: 1, label: '/pesquisa', url: '/research', isExternal: false },
+      { id: 2, order: 2, label: '/equipe', url: '/people', isExternal: false },
+      { id: 3, order: 3, label: '/projetos', url: '/projects', isExternal: false },
+      { id: 4, order: 4, label: '/parceiros', url: '/partners', isExternal: false },
+      { id: 5, order: 5, label: '/publicações', url: '/publications', isExternal: false },
+      { id: 6, order: 6, label: '/notícias', url: '/news', isExternal: false },
+    ],
+    socialLinks: [
+      { id: 1, platform: 'LinkedIn', url: '#', label: 'LinkedIn' },
+      { id: 2, platform: 'GitHub', url: '#', label: 'GitHub' },
+    ],
+  };
+
+  try {
+    const response = await fetchAPI<{
+      data: { id: number; attributes: HomepageSettingAttributes };
+    }>('homepage-setting', {
+      populate: ['siteLogo', 'mainMenu', 'socialLinks'],
+    });
+
+    const attrs = response.data?.attributes;
+    if (!attrs) return defaults;
+
+    // Map mainMenu to expected format with slash prefix for labels
+    const mainMenu =
+      attrs.mainMenu
+        ?.sort((a, b) => a.order - b.order)
+        .map((item) => ({
+          ...item,
+          label: item.label.startsWith('/') ? item.label : `/${item.label.toLowerCase()}`,
+        })) || defaults.mainMenu;
+
+    return {
+      groupName: attrs.groupName || defaults.groupName,
+      tagline: attrs.tagline || defaults.tagline,
+      department: attrs.department || defaults.department,
+      institutionalAffiliation: attrs.institutionalAffiliation || defaults.institutionalAffiliation,
+      mainContactEmail: attrs.mainContactEmail || defaults.mainContactEmail,
+      phone: attrs.phone || defaults.phone,
+      address: attrs.address || defaults.address,
+      footerDescription: attrs.footerDescription,
+      logoUrl: getStrapiMediaUrl(attrs.siteLogo?.data?.attributes?.url),
+      logoAlt: attrs.siteLogoAlt || defaults.logoAlt,
+      mainMenu,
+      socialLinks: attrs.socialLinks || defaults.socialLinks,
+    };
+  } catch (error) {
+    console.error('Error fetching layout data:', error);
+    return defaults;
   }
 }

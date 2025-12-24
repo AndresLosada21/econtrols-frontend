@@ -1,15 +1,18 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, MapPin, Phone } from 'lucide-react';
+import type { LayoutData } from '@/types/strapi';
 
-const footerLinks = [
-  { href: '/', label: 'overview' },
-  { href: '/research', label: 'pesquisa' },
-  { href: '/people', label: 'equipe' },
-  { href: '/projects', label: 'projetos' },
-  { href: '/partners', label: 'parceiros' },
-  { href: '/publications', label: 'publicações' },
-  { href: '/news', label: 'notícias' },
-  { href: 'https://ufam.edu.br', label: 'portal ufam', external: true },
+// Default footer links (fallback)
+const defaultFooterLinks = [
+  { id: 0, url: '/', label: 'overview', isExternal: false },
+  { id: 1, url: '/research', label: 'pesquisa', isExternal: false },
+  { id: 2, url: '/people', label: 'equipe', isExternal: false },
+  { id: 3, url: '/projects', label: 'projetos', isExternal: false },
+  { id: 4, url: '/partners', label: 'parceiros', isExternal: false },
+  { id: 5, url: '/publications', label: 'publicações', isExternal: false },
+  { id: 6, url: '/news', label: 'notícias', isExternal: false },
+  { id: 7, url: 'https://ufam.edu.br', label: 'portal ufam', isExternal: true },
 ];
 
 // SVG Icons inline para evitar problemas de depreciação
@@ -29,14 +32,64 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
-const socialLinks = [
-  { href: '#', Icon: LinkedInIcon, label: 'LinkedIn' },
-  { href: '#', Icon: GitHubIcon, label: 'GitHub' },
-  { href: 'mailto:iurybessa@ufam.edu.br', Icon: Mail, label: 'Email' },
-];
+function GoogleScholarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 24a7 7 0 110-14 7 7 0 010 14zm0-24L0 9.5l4.838 3.94A8 8 0 0112 9a8 8 0 017.162 4.44L24 9.5 12 0z" />
+    </svg>
+  );
+}
 
-export default function Footer() {
+// Map platform name to icon component
+function getSocialIcon(platform: string) {
+  const platformLower = platform.toLowerCase();
+  if (platformLower.includes('linkedin')) return LinkedInIcon;
+  if (platformLower.includes('github')) return GitHubIcon;
+  if (platformLower.includes('scholar')) return GoogleScholarIcon;
+  return Mail; // Default fallback
+}
+
+interface FooterProps {
+  layoutData?: LayoutData | null;
+}
+
+export default function Footer({ layoutData }: FooterProps) {
   const currentYear = new Date().getFullYear();
+
+  // Use data from Strapi or fallback to defaults
+  const groupName = layoutData?.groupName || 'e-Controls';
+  const department =
+    layoutData?.department || 'Departamento de Eletricidade - Faculdade de Tecnologia';
+  const institution =
+    layoutData?.institutionalAffiliation || 'Universidade Federal do Amazonas (UFAM)';
+  const email = layoutData?.mainContactEmail || 'iurybessa@ufam.edu.br';
+  const phone = layoutData?.phone || '+55 92 3305-1181';
+  const address =
+    layoutData?.address ||
+    'Av. General Rodrigo Otávio, 6200\nCoroado I, Manaus - AM\nCEP: 69077-000';
+  const logoUrl = layoutData?.logoUrl;
+  const logoAlt = layoutData?.logoAlt || 'e-Controls Logo';
+
+  // Build footer links from menu + external link
+  const footerLinks = layoutData?.mainMenu
+    ? [
+        { id: 0, url: '/', label: 'overview', isExternal: false },
+        ...layoutData.mainMenu.map((item) => ({
+          ...item,
+          label: item.label.replace('/', '').toLowerCase(),
+        })),
+        { id: 99, url: 'https://ufam.edu.br', label: 'portal ufam', isExternal: true },
+      ]
+    : defaultFooterLinks;
+
+  // Social links from Strapi or defaults
+  const socialLinks = layoutData?.socialLinks || [
+    { id: 1, platform: 'LinkedIn', url: '#', label: 'LinkedIn' },
+    { id: 2, platform: 'GitHub', url: '#', label: 'GitHub' },
+  ];
+
+  // Parse address - handle both plain text and markdown
+  const addressLines = address.replace(/\*\*/g, '').split('\n').filter(Boolean);
 
   return (
     <footer id="contact" className="bg-ufam-dark pt-20 pb-10 border-t border-white/5 relative z-10">
@@ -45,27 +98,51 @@ export default function Footer() {
           {/* Logo and Description */}
           <div className="col-span-1 md:col-span-2">
             <div className="font-tech font-bold text-2xl tracking-tighter text-white flex items-center gap-2 mb-6">
-              <span className="w-3 h-3 bg-ufam-primary rounded-full"></span>
-              e-Controls
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={logoAlt}
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 object-contain"
+                />
+              ) : (
+                <span className="w-3 h-3 bg-ufam-primary rounded-full"></span>
+              )}
+              {groupName}
             </div>
             <p className="text-ufam-secondary max-w-sm mb-6">
-              Departamento de Eletricidade - Faculdade de Tecnologia
+              {department}
               <br />
-              Universidade Federal do Amazonas (UFAM)
+              {institution}
             </p>
             <div className="flex gap-4">
-              {socialLinks.map((social) => (
+              {socialLinks.map((social) => {
+                const IconComponent = getSocialIcon(social.platform);
+                const isMailto = social.url.startsWith('mailto:');
+                return (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    className="w-10 h-10 border border-white/10 rounded flex items-center justify-center text-ufam-secondary hover:text-white hover:bg-ufam-primary transition-all"
+                    aria-label={social.label}
+                    target={!isMailto ? '_blank' : undefined}
+                    rel={!isMailto ? 'noopener noreferrer' : undefined}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                  </a>
+                );
+              })}
+              {/* Always show email icon if not in social links */}
+              {!socialLinks.some((s) => s.url.startsWith('mailto:')) && (
                 <a
-                  key={social.label}
-                  href={social.href}
+                  href={`mailto:${email}`}
                   className="w-10 h-10 border border-white/10 rounded flex items-center justify-center text-ufam-secondary hover:text-white hover:bg-ufam-primary transition-all"
-                  aria-label={social.label}
-                  target={social.href.startsWith('http') ? '_blank' : undefined}
-                  rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  aria-label="Email"
                 >
-                  <social.Icon className="w-5 h-5" />
+                  <Mail className="w-5 h-5" />
                 </a>
-              ))}
+              )}
             </div>
           </div>
 
@@ -76,20 +153,23 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-ufam-primary shrink-0" />
                 <span>
-                  Av. General Rodrigo Otávio, 6200
-                  <br />
-                  Coroado I, Manaus - AM
-                  <br />
-                  CEP: 69077-000
+                  {addressLines.map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < addressLines.length - 1 && <br />}
+                    </span>
+                  ))}
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-ufam-primary" />
-                <span>+55 92 3305-1181</span>
+                <span>{phone}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-ufam-primary" />
-                <span>iurybessa@ufam.edu.br</span>
+                <a href={`mailto:${email}`} className="hover:text-ufam-primary transition-colors">
+                  {email}
+                </a>
               </li>
             </ul>
           </div>
@@ -99,10 +179,10 @@ export default function Footer() {
             <h4 className="text-white font-bold mb-6 font-tech lowercase">menu</h4>
             <ul className="space-y-2 text-sm text-ufam-secondary">
               {footerLinks.map((link) => (
-                <li key={link.href}>
-                  {link.external ? (
+                <li key={link.id}>
+                  {link.isExternal ? (
                     <a
-                      href={link.href}
+                      href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-ufam-primary transition-colors"
@@ -110,7 +190,7 @@ export default function Footer() {
                       {link.label}
                     </a>
                   ) : (
-                    <Link href={link.href} className="hover:text-ufam-primary transition-colors">
+                    <Link href={link.url} className="hover:text-ufam-primary transition-colors">
                       {link.label}
                     </Link>
                   )}
@@ -122,7 +202,9 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-ufam-secondary font-tech">
-          <p>&copy; {currentYear} e-Controls Research Group. Todos os direitos reservados.</p>
+          <p>
+            &copy; {currentYear} {groupName} Research Group. Todos os direitos reservados.
+          </p>
           <p className="mt-2 md:mt-0">
             Desenvolvido com <span className="text-ufam-primary">&#10084;</span> na Amazônia.
           </p>

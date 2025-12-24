@@ -1,21 +1,34 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import type { LayoutData } from '@/types/strapi';
 
-const navLinks = [
-  { href: '/research', label: '/pesquisa' },
-  { href: '/people', label: '/equipe' },
-  { href: '/projects', label: '/projetos' },
-  { href: '/partners', label: '/parceiros' },
-  { href: '/publications', label: '/publicações' },
-  { href: '/news', label: '/notícias' },
+// Default nav links (fallback)
+const defaultNavLinks = [
+  { id: 1, url: '/research', label: '/pesquisa', isExternal: false },
+  { id: 2, url: '/people', label: '/equipe', isExternal: false },
+  { id: 3, url: '/projects', label: '/projetos', isExternal: false },
+  { id: 4, url: '/partners', label: '/parceiros', isExternal: false },
+  { id: 5, url: '/publications', label: '/publicações', isExternal: false },
+  { id: 6, url: '/news', label: '/notícias', isExternal: false },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  layoutData?: LayoutData | null;
+}
+
+export default function Header({ layoutData }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Use data from Strapi or fallback to defaults
+  const navLinks = layoutData?.mainMenu?.filter((item) => item.url !== '/') || defaultNavLinks;
+  const groupName = layoutData?.groupName || 'e-Controls';
+  const logoUrl = layoutData?.logoUrl;
+  const logoAlt = layoutData?.logoAlt || 'e-Controls Logo';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +39,30 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Logo component - uses image from Strapi or fallback to CSS logo
+  const Logo = () => (
+    <Link
+      href="/"
+      className="font-tech font-bold text-xl tracking-widest text-white flex items-center gap-2"
+    >
+      {logoUrl ? (
+        <Image
+          src={logoUrl}
+          alt={logoAlt}
+          width={32}
+          height={32}
+          className="w-8 h-8 object-contain"
+        />
+      ) : (
+        <div className="relative w-8 h-8 flex items-center justify-center">
+          <span className="absolute w-full h-full border-2 border-ufam-primary rounded-r-lg border-l-0"></span>
+          <span className="w-2 h-2 bg-ufam-secondary rounded-full absolute left-0"></span>
+        </div>
+      )}
+      {groupName}
+    </Link>
+  );
+
   return (
     <nav
       className={`fixed w-full z-50 top-0 transition-all duration-300 border-b border-white/5 ${
@@ -34,28 +71,31 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
         {/* Logo */}
-        <Link
-          href="/"
-          className="font-tech font-bold text-xl tracking-widest text-white flex items-center gap-2"
-        >
-          <div className="relative w-8 h-8 flex items-center justify-center">
-            <span className="absolute w-full h-full border-2 border-ufam-primary rounded-r-lg border-l-0"></span>
-            <span className="w-2 h-2 bg-ufam-secondary rounded-full absolute left-0"></span>
-          </div>
-          e-Controls
-        </Link>
+        <Logo />
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex gap-6 font-tech text-xs text-ufam-secondary tracking-widest">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="hover:text-ufam-primary transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.isExternal ? (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-ufam-primary transition-colors"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.id}
+                href={link.url}
+                className="hover:text-ufam-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
 
         {/* Contact Button */}
@@ -80,16 +120,29 @@ export default function Header() {
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-ufam-bg/95 backdrop-blur-lg border-t border-white/5">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.isExternal ? (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.id}
+                  href={link.url}
+                  className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
             <Link
               href="#contact"
               className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"

@@ -309,18 +309,30 @@ export interface HomepageSettingAttributes {
   mainContactEmail?: string;
   phone?: string;
   address?: string;
+  siteLogo?: StrapiMedia;
+  siteLogoAlt?: string;
+  footerDescription?: string;
   keyMetrics?: {
-    publications: number;
-    citations: number;
-    mastersFormed: number;
-    internationalPartnerships: number;
-  };
+    id: number;
+    order: number;
+    label: string;
+    value: string;
+    icon?: string;
+  }[];
   socialLinks?: {
-    linkedin?: string;
-    github?: string;
-    twitter?: string;
-    youtube?: string;
-  };
+    id: number;
+    platform: string;
+    url: string;
+    label: string;
+  }[];
+  mainMenu?: {
+    id: number;
+    order: number;
+    label: string;
+    url: string;
+    isExternal: boolean;
+    icon?: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -443,4 +455,31 @@ export interface AlumnusFlat {
   linkedinUrl?: string;
   lattesUrl?: string;
   photoUrl?: string;
+}
+
+// Layout Data (for Header/Footer)
+export interface LayoutData {
+  groupName: string;
+  tagline: string;
+  department?: string;
+  institutionalAffiliation?: string;
+  mainContactEmail?: string;
+  phone?: string;
+  address?: string;
+  footerDescription?: string;
+  logoUrl?: string;
+  logoAlt?: string;
+  mainMenu: {
+    id: number;
+    order: number;
+    label: string;
+    url: string;
+    isExternal: boolean;
+  }[];
+  socialLinks: {
+    id: number;
+    platform: string;
+    url: string;
+    label: string;
+  }[];
 }

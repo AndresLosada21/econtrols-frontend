@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Orbitron } from 'next/font/google';
 import './globals.css';
 import { Header, Footer } from '@/components/layout';
+import { getLayoutData } from '@/lib/strapi';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,19 +32,22 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch layout data from Strapi
+  const layoutData = await getLayoutData();
+
   return (
     <html lang="pt-br" className={`scroll-smooth ${inter.variable} ${orbitron.variable}`}>
       <body
         className={`${inter.className} antialiased selection:bg-ufam-primary selection:text-white`}
       >
-        <Header />
+        <Header layoutData={layoutData} />
         <main>{children}</main>
-        <Footer />
+        <Footer layoutData={layoutData} />
       </body>
     </html>
   );
