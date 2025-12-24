@@ -2,11 +2,14 @@ import Link from 'next/link';
 import { Mail, MapPin, Phone } from 'lucide-react';
 
 const footerLinks = [
-  { href: '#about', label: 'Sobre' },
-  { href: '#research', label: 'Linhas de Pesquisa' },
-  { href: '#projects', label: 'Projetos' },
-  { href: '#team', label: 'Equipe' },
-  { href: 'https://ufam.edu.br', label: 'Portal UFAM', external: true },
+  { href: '/', label: 'overview' },
+  { href: '/research', label: 'pesquisa' },
+  { href: '/people', label: 'equipe' },
+  { href: '/projects', label: 'projetos' },
+  { href: '/partners', label: 'parceiros' },
+  { href: '/publications', label: 'publicações' },
+  { href: '/news', label: 'notícias' },
+  { href: 'https://ufam.edu.br', label: 'portal ufam', external: true },
 ];
 
 // SVG Icons inline para evitar problemas de depreciação
@@ -68,7 +71,7 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-white font-bold mb-6 font-tech">Contato</h4>
+            <h4 className="text-white font-bold mb-6 font-tech lowercase">contato</h4>
             <ul className="space-y-4 text-sm text-ufam-secondary">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-ufam-primary shrink-0" />
@@ -93,7 +96,7 @@ export default function Footer() {
 
           {/* Menu Links */}
           <div>
-            <h4 className="text-white font-bold mb-6 font-tech">Menu</h4>
+            <h4 className="text-white font-bold mb-6 font-tech lowercase">menu</h4>
             <ul className="space-y-2 text-sm text-ufam-secondary">
               {footerLinks.map((link) => (
                 <li key={link.href}>

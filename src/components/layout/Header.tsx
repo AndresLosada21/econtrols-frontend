@@ -5,12 +5,12 @@ import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { href: '#about', label: '/SOBRE' },
-  { href: '#research', label: '/PESQUISA' },
-  { href: '#projects', label: '/PROJETOS' },
-  { href: '#team', label: '/EQUIPE' },
-  { href: '#tools', label: '/FERRAMENTAS' },
-  { href: '#publications', label: '/PUBLICAÇÕES' },
+  { href: '/research', label: '/pesquisa' },
+  { href: '/people', label: '/equipe' },
+  { href: '/projects', label: '/projetos' },
+  { href: '/partners', label: '/parceiros' },
+  { href: '/publications', label: '/publicações' },
+  { href: '/news', label: '/notícias' },
 ];
 
 export default function Header() {
@@ -61,9 +61,9 @@ export default function Header() {
         {/* Contact Button */}
         <Link
           href="#contact"
-          className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all"
+          className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all lowercase"
         >
-          CONTATO
+          contato
         </Link>
 
         {/* Mobile Menu Button */}
@@ -92,10 +92,10 @@ export default function Header() {
             ))}
             <Link
               href="#contact"
-              className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center"
+              className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              CONTATO
+              contato
             </Link>
           </div>
         </div>

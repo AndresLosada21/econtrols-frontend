@@ -23,12 +23,12 @@ export default function Hero() {
         {/* University tag */}
         <div className="inline-block mb-6 overflow-hidden">
           <p
-            className={`font-tech text-ufam-light text-sm md:text-base tracking-[0.2em] transition-transform duration-700 ${
+            className={`font-tech text-ufam-light text-sm md:text-base tracking-[0.2em] transition-transform duration-700 lowercase ${
               isLoaded ? 'translate-y-0' : 'translate-y-10'
             }`}
             style={{ transitionDelay: '100ms' }}
           >
-            :: UNIVERSIDADE FEDERAL DO AMAZONAS ::
+            :: universidade federal do amazonas ::
           </p>
         </div>
 
@@ -77,23 +77,25 @@ export default function Hero() {
         >
           <Link
             href="#about"
-            className="group inline-flex items-center justify-center gap-2 bg-ufam-primary text-white font-tech tracking-wider font-bold px-8 py-4 rounded hover:bg-ufam-light hover:text-ufam-dark transition-all"
+            className="group inline-flex items-center justify-center gap-2 bg-ufam-primary text-white font-tech tracking-wider font-bold px-8 py-4 rounded hover:bg-ufam-light hover:text-ufam-dark transition-all lowercase"
           >
-            CONHEÇA O GRUPO
+            conheça o grupo
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
-            href="#publications"
-            className="inline-flex items-center justify-center gap-2 text-white font-tech tracking-wider font-bold px-8 py-4 rounded border border-white/20 hover:border-ufam-light hover:text-ufam-light transition-all"
+            href="/publications"
+            className="inline-flex items-center justify-center gap-2 text-white font-tech tracking-wider font-bold px-8 py-4 rounded border border-white/20 hover:border-ufam-light hover:text-ufam-light transition-all lowercase"
           >
-            VER PUBLICAÇÕES
+            ver publicações
           </Link>
         </div>
       </div>
 
       {/* Scroll indicator */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
-        <span className="font-tech text-[10px] tracking-widest text-ufam-secondary">SCROLL</span>
+        <span className="font-tech text-[10px] tracking-widest text-ufam-secondary lowercase">
+          scroll
+        </span>
         <div className="w-[1px] h-12 bg-gradient-to-b from-ufam-primary to-transparent" />
       </div>
     </header>

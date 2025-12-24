@@ -74,8 +74,8 @@ function ResearchCard({ title, description, icon, index }: ResearchCardProps) {
       <div className="w-full h-[1px] bg-white/10 mb-4" />
 
       {/* Area number */}
-      <span className="text-xs font-tech text-ufam-secondary">
-        AREA #{String(index + 1).padStart(2, '0')}
+      <span className="text-xs font-tech text-ufam-secondary lowercase">
+        area #{String(index + 1).padStart(2, '0')}
       </span>
     </div>
   );
@@ -140,15 +140,15 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center">
         {/* Section header */}
         <div className="absolute top-24 left-6 md:left-20 z-20 pointer-events-none">
-          <h2 className="text-6xl md:text-8xl font-black text-white/5 absolute -top-10 -left-4 font-tech">
-            PESQUISA
+          <h2 className="text-6xl md:text-8xl font-black text-white/5 absolute -top-10 -left-4 font-tech lowercase">
+            pesquisa
           </h2>
           <h2 className="text-3xl md:text-4xl font-bold text-white relative font-tech">
             Linhas de Pesquisa
           </h2>
-          <p className="font-tech text-ufam-light text-xs mt-2 flex items-center gap-2">
+          <p className="font-tech text-ufam-light text-xs mt-2 flex items-center gap-2 lowercase">
             <ArrowRight className="w-4 h-4" />
-            {isMobile ? 'ARRASTE PARA O LADO' : 'SCROLL PARA NAVEGAR'}
+            {isMobile ? 'arraste para o lado' : 'scroll para navegar'}
           </p>
         </div>
 
