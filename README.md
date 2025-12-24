@@ -21,12 +21,22 @@ Este projeto é o frontend do website institucional do grupo e-Controls, desenvo
 econtrols-frontend/
 ├── src/
 │   ├── app/              # App Router (páginas e layouts)
+│   │   ├── globals.css   # Estilos globais
+│   │   ├── layout.tsx    # Layout principal
+│   │   └── page.tsx      # Homepage
 │   ├── components/       # Componentes reutilizáveis
-│   ├── lib/             # Utilitários e helpers
-│   └── types/           # Definições TypeScript
-├── public/              # Assets estáticos
-├── .github/             # Workflows e configurações GitHub
-└── docs/                # Documentação adicional
+│   │   ├── layout/       # Header, Footer
+│   │   ├── sections/     # Seções da página
+│   │   └── ui/           # Componentes UI reutilizáveis
+│   ├── lib/              # Utilitários e helpers
+│   │   ├── strapi.ts     # Cliente API Strapi
+│   │   └── queries/      # Queries específicas por collection
+│   ├── hooks/            # Custom React hooks
+│   ├── styles/           # Estilos adicionais
+│   └── types/            # Definições TypeScript
+│       └── strapi.ts     # Tipos das collections Strapi
+├── public/               # Assets estáticos
+└── .husky/               # Git hooks (pre-commit)
 ```
 
 ## Páginas Principais
@@ -77,16 +87,18 @@ npm run dev      # Executar em modo desenvolvimento
 npm run build    # Criar build de produção
 npm run start    # Executar build de produção
 npm run lint     # Executar linter
+npm run format   # Formatar código com Prettier
 ```
 
 ## Variáveis de Ambiente
 
-Crie um arquivo `.env.local` na raiz do projeto:
+Crie um arquivo `.env.local` na raiz do projeto (use `.env.example` como referência):
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:1337
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
 ```
+
+**Nota**: O Strapi deve estar rodando localmente na porta 1337 com as permissões de API configuradas para acesso público às collections.
 
 ## Contribuindo
 
@@ -111,23 +123,26 @@ Seguimos o padrão Conventional Commits:
 
 ### Cores Principais
 
+Configuradas no Tailwind (`tailwind.config.ts`):
+
 ```css
---ufam-green: #00D084    /* Verde UFAM (primária) */
---ufam-dark: #0A0F14     /* Fundo escuro */
---ufam-panel: #111820    /* Painéis */
---ufam-accent: #00FF9D   /* Acento */
+primary:   #00D084  /* Verde UFAM */
+secondary: #00FF9D  /* Verde claro/acento */
+dark:      #0A0F14  /* Fundo escuro */
+bg:        #111820  /* Background painéis */
+light:     #E0E0E0  /* Texto claro */
 ```
 
 ### Tipografia
 
 - **Principal**: Inter (sans-serif)
-- **Técnica**: JetBrains Mono (monospace)
+- **Display**: Orbitron (títulos tech)
 
 ## Roadmap
 
-- [ ] Sprint 1: Setup & Infraestrutura
-- [ ] Sprint 2: Páginas Principais
-- [ ] Sprint 3: Integração com Strapi
+- [x] Sprint 1: Setup & Infraestrutura
+- [ ] Sprint 2: Homepage Core (Hero, Navbar, Research Lines)
+- [ ] Sprint 3: Páginas Internas
 - [ ] Sprint 4: Componentes Avançados
 - [ ] Sprint 5: Otimização e Testes
 - [ ] Sprint 6: Deploy em Produção
