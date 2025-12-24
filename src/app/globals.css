@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: #050505;
+    --background: #0a0a0c;
     --foreground: #e2e8f0;
   }
 }
@@ -15,22 +15,22 @@ body {
   overflow-x: hidden;
 }
 
-/* Scrollbar Customizada */
+/* Scrollbar Customizada - Cores UFAM */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0F14;
+  background: #373435;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #7c7f87;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00D084;
+  background: #103eb3;
 }
 
 /* Utilitários de Animação */
@@ -45,14 +45,39 @@ body {
   transform: translateY(0);
 }
 
-.card-hover:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px -10px rgba(0, 208, 132, 0.15);
+.card-hover {
+  transition: all 0.3s ease;
 }
 
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px -10px rgba(16, 62, 179, 0.3);
+  border-color: #103eb3;
+}
+
+/* Gradient Text - UFAM */
 .gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #93b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Font Classes */
+.font-tech {
+  font-family: var(--font-orbitron), 'Orbitron', sans-serif;
+}
+
+/* Custom Cursor Base */
+.custom-cursor {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #93b6d4;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
 }
