@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ExternalLink, Quote } from 'lucide-react';
 import type { PublicationFlat } from '@/types/strapi';
+import { getPublicationTypeColors } from '@/styles/utils';
 
 interface PublicationCardProps {
   publication: PublicationFlat;
@@ -10,25 +11,7 @@ interface PublicationCardProps {
 }
 
 export default function PublicationCard({ publication, index = 0 }: PublicationCardProps) {
-  // Get publication type badge color
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'Journal Article':
-        return { color: 'bg-blue-500/20 text-blue-400', label: 'journal' };
-      case 'Conference Paper':
-        return { color: 'bg-purple-500/20 text-purple-400', label: 'conference' };
-      case 'Book Chapter':
-        return { color: 'bg-amber-500/20 text-amber-400', label: 'book chapter' };
-      case 'Thesis':
-        return { color: 'bg-green-500/20 text-green-400', label: 'thesis' };
-      case 'Technical Report':
-        return { color: 'bg-gray-500/20 text-gray-400', label: 'report' };
-      default:
-        return { color: 'bg-gray-500/20 text-gray-400', label: type };
-    }
-  };
-
-  const typeBadge = getTypeBadge(publication.publicationType);
+  const typeColors = getPublicationTypeColors(publication.publicationType);
   const venue = publication.journalName || publication.conferenceName;
 
   return (
@@ -45,8 +28,10 @@ export default function PublicationCard({ publication, index = 0 }: PublicationC
             <span className="inline-block px-2 py-1 bg-ufam-primary/20 text-ufam-light text-xs font-tech rounded">
               {publication.year}
             </span>
-            <span className={`inline-block px-2 py-1 text-xs font-tech rounded ${typeBadge.color}`}>
-              {typeBadge.label}
+            <span
+              className={`inline-block px-2 py-1 text-xs font-tech rounded ${typeColors.bg} ${typeColors.text}`}
+            >
+              {typeColors.label}
             </span>
           </div>
 

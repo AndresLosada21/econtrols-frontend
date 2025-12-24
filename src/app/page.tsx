@@ -21,6 +21,7 @@ import FacultyCard from '@/components/cards/FacultyCard';
 import ProjectCard from '@/components/cards/ProjectCard';
 import PublicationCard from '@/components/cards/PublicationCard';
 import { AnimatedCounter } from '@/components/effects/AnimatedCounter';
+import { getSectorColors } from '@/styles/utils';
 
 export default async function Home() {
   // Fetch data from Strapi
@@ -272,21 +273,17 @@ export default async function Home() {
                       </p>
                     )}
 
-                    {alum.currentSector && (
-                      <span
-                        className={`text-xs font-tech px-2 py-1 rounded mt-3 inline-block ${
-                          alum.currentSector === 'Academia'
-                            ? 'bg-blue-500/20 text-blue-400'
-                            : alum.currentSector === 'Indústria'
-                              ? 'bg-green-500/20 text-green-400'
-                              : alum.currentSector === 'Governo'
-                                ? 'bg-purple-500/20 text-purple-400'
-                                : 'bg-orange-500/20 text-orange-400'
-                        }`}
-                      >
-                        {alum.currentSector.toLowerCase()}
-                      </span>
-                    )}
+                    {alum.currentSector &&
+                      (() => {
+                        const sectorColors = getSectorColors(alum.currentSector);
+                        return (
+                          <span
+                            className={`text-xs font-tech px-2 py-1 rounded mt-3 inline-block ${sectorColors.bg} ${sectorColors.text}`}
+                          >
+                            {alum.currentSector.toLowerCase()}
+                          </span>
+                        );
+                      })()}
                   </div>
                 </FadeIn>
               ))

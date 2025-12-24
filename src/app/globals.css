@@ -2,42 +2,148 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   ============================================
+   
+   IMPORTANTE: Todas as cores são definidas aqui como variáveis CSS.
+   Para alterar cores do projeto, edite APENAS este bloco ou src/styles/theme.ts
+   
+   ============================================ */
+
 @layer base {
   :root {
-    --background: #0a0a0c;
-    --foreground: #e2e8f0;
+    /* ===================
+       CORES UFAM (Principal)
+       =================== */
+    --color-ufam-primary: #103eb3;
+    --color-ufam-secondary: #7c7f87;
+    --color-ufam-light: #93b6d4;
+    --color-ufam-dark: #373435;
+
+    /* ===================
+       CORES DE FUNDO
+       =================== */
+    --color-bg-primary: #0a0a0c;
+    --color-bg-secondary: #121214;
+    --color-bg-tertiary: #1a1a1c;
+    --color-bg-elevated: #2a2a2c;
+
+    /* ===================
+       CORES DE TEXTO
+       =================== */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-text-disabled: #64748b;
+
+    /* ===================
+       CORES DE ESTADO
+       =================== */
+    --color-success: #22c55e;
+    --color-success-muted: rgba(34, 197, 94, 0.2);
+    --color-warning: #f59e0b;
+    --color-warning-muted: rgba(245, 158, 11, 0.2);
+    --color-error: #ef4444;
+    --color-error-muted: rgba(239, 68, 68, 0.2);
+    --color-info: #3b82f6;
+    --color-info-muted: rgba(59, 130, 246, 0.2);
+
+    /* ===================
+       CORES DE BORDA
+       =================== */
+    --color-border-default: rgba(255, 255, 255, 0.05);
+    --color-border-subtle: rgba(255, 255, 255, 0.1);
+    --color-border-strong: rgba(255, 255, 255, 0.2);
+    --color-border-accent: var(--color-ufam-primary);
+
+    /* ===================
+       SOMBRAS
+       =================== */
+    --shadow-glow-sm: 0 0 10px rgba(16, 62, 179, 0.4);
+    --shadow-glow-md: 0 0 20px rgba(16, 62, 179, 0.4);
+    --shadow-glow-lg: 0 0 30px rgba(16, 62, 179, 0.4);
+    --shadow-elevated: 0 10px 30px -10px rgba(16, 62, 179, 0.3);
+
+    /* ===================
+       TRANSIÇÕES
+       =================== */
+    --transition-fast: 150ms;
+    --transition-normal: 300ms;
+    --transition-slow: 500ms;
+    --easing-smooth: cubic-bezier(0.5, 0, 0, 1);
+    --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* ===================
+       ESPAÇAMENTOS
+       =================== */
+    --spacing-section-sm: 3rem;
+    --spacing-section-md: 5rem;
+    --spacing-section-lg: 6rem;
+    --spacing-container: 1.5rem;
+
+    /* ===================
+       TIPOGRAFIA
+       =================== */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-tech: 'Orbitron', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', Consolas, monospace;
+
+    /* ===================
+       ALIASES (para compatibilidade)
+       =================== */
+    --background: var(--color-bg-primary);
+    --foreground: var(--color-text-secondary);
+  }
+
+  /* Dark mode (default) - pode ser expandido para light mode no futuro */
+  .dark {
+    --background: var(--color-bg-primary);
+    --foreground: var(--color-text-secondary);
   }
 }
+
+/* ============================================
+   ESTILOS BASE
+   ============================================ */
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   overflow-x: hidden;
+  font-family: var(--font-sans);
 }
 
-/* Scrollbar Customizada - Cores UFAM */
+/* ============================================
+   SCROLLBAR CUSTOMIZADA
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #373435;
+  background: var(--color-ufam-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #7c7f87;
+  background: var(--color-ufam-secondary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #103eb3;
+  background: var(--color-ufam-primary);
 }
 
-/* Utilitários de Animação */
+/* ============================================
+   CLASSES UTILITÁRIAS
+   ============================================ */
+
+/* Reveal on Scroll */
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+  transition: all 0.8s var(--easing-smooth);
 }
 
 .reveal-on-scroll.is-visible {
@@ -45,34 +151,35 @@ body {
   transform: translateY(0);
 }
 
+/* Card Hover Effect */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal) ease;
 }
 
 .card-hover:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px -10px rgba(16, 62, 179, 0.3);
-  border-color: #103eb3;
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--color-ufam-primary);
 }
 
-/* Gradient Text - UFAM */
+/* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #93b6d4 100%);
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-ufam-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Font Classes */
+/* Font Tech */
 .font-tech {
-  font-family: var(--font-orbitron), 'Orbitron', sans-serif;
+  font-family: var(--font-tech);
 }
 
-/* Custom Cursor Base */
+/* Custom Cursor */
 .custom-cursor {
   width: 20px;
   height: 20px;
-  border: 1px solid #93b6d4;
+  border: 1px solid var(--color-ufam-light);
   border-radius: 50%;
   position: fixed;
   pointer-events: none;
@@ -82,11 +189,36 @@ body {
   transform: translate(-50%, -50%);
 }
 
+/* Glow Effects */
+.glow-on-hover {
+  transition: box-shadow var(--transition-normal) ease;
+}
+
+.glow-on-hover:hover {
+  box-shadow: var(--shadow-glow-md);
+}
+
+/* Animated Gradient Text */
+.animated-gradient-text {
+  background: linear-gradient(
+    90deg,
+    var(--color-text-primary),
+    var(--color-ufam-light),
+    var(--color-ufam-primary),
+    var(--color-ufam-light),
+    var(--color-text-primary)
+  );
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 8s ease infinite;
+}
+
 /* ============================================
-   Animation Classes - Issue #46
+   ANIMAÇÕES
    ============================================ */
 
-/* Keyframes */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -180,39 +312,31 @@ body {
   }
 }
 
-/* Animation Utility Classes */
+/* Animation Classes */
 .animate-fade-in {
   animation: fadeIn 0.6s ease-out forwards;
 }
-
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out forwards;
 }
-
 .animate-fade-in-down {
   animation: fadeInDown 0.6s ease-out forwards;
 }
-
 .animate-fade-in-left {
   animation: fadeInLeft 0.6s ease-out forwards;
 }
-
 .animate-fade-in-right {
   animation: fadeInRight 0.6s ease-out forwards;
 }
-
 .animate-scale-in {
   animation: scaleIn 0.5s ease-out forwards;
 }
-
 .animate-pulse-slow {
   animation: pulse 2s ease-in-out infinite;
 }
-
 .animate-bounce-slow {
   animation: bounce 2s ease-in-out infinite;
 }
-
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   background-size: 200% 100%;
@@ -239,7 +363,15 @@ body {
   animation-delay: 600ms;
 }
 
-/* Respect reduced motion preference */
+/* Scroll Indicator */
+.scroll-indicator {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* ============================================
+   ACESSIBILIDADE - Reduced Motion
+   ============================================ */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -255,26 +387,69 @@ body {
   }
 }
 
-/* Scroll indicator animation */
-.scroll-indicator {
-  animation: bounce 2s ease-in-out infinite;
-}
+/* ============================================
+   COMPONENTES LAYER
+   ============================================ */
 
-/* Glow effect on hover */
-.glow-on-hover {
-  transition: box-shadow 0.3s ease;
-}
+@layer components {
+  /* Section Container */
+  .section-container {
+    @apply py-section-lg relative z-10;
+  }
 
-.glow-on-hover:hover {
-  box-shadow: 0 0 20px rgba(16, 62, 179, 0.4);
-}
+  /* Card Base */
+  .card-base {
+    @apply bg-surface-elevated border border-border-subtle rounded-lg;
+    @apply hover:border-ufam-primary/50 transition-all duration-normal;
+  }
 
-/* Text gradient animation */
-.animated-gradient-text {
-  background: linear-gradient(90deg, #ffffff, #93b6d4, #103eb3, #93b6d4, #ffffff);
-  background-size: 400% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 8s ease infinite;
+  /* Button Primary */
+  .btn-primary {
+    @apply bg-ufam-primary text-white font-tech text-sm px-6 py-3 rounded;
+    @apply hover:bg-ufam-primary/90 transition-colors duration-fast;
+  }
+
+  /* Button Secondary */
+  .btn-secondary {
+    @apply bg-transparent border border-ufam-primary text-ufam-primary;
+    @apply font-tech text-sm px-6 py-3 rounded;
+    @apply hover:bg-ufam-primary/10 transition-colors duration-fast;
+  }
+
+  /* Section Header */
+  .section-header {
+    @apply font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase;
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-white font-tech;
+  }
+
+  /* Link Arrow */
+  .link-arrow {
+    @apply group inline-flex items-center gap-2 text-ufam-primary font-tech text-sm;
+    @apply hover:text-ufam-light transition-colors lowercase;
+  }
+
+  /* Badge */
+  .badge {
+    @apply text-xs font-tech px-2 py-1 rounded inline-block;
+  }
+
+  .badge-success {
+    @apply badge bg-state-success-muted text-state-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-state-warning-muted text-state-warning;
+  }
+
+  .badge-error {
+    @apply badge bg-state-error-muted text-state-error;
+  }
+
+  .badge-info {
+    @apply badge bg-state-info-muted text-state-info;
+  }
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 import type { ProjectFlat } from '@/types/strapi';
+import { getFundingAgencyGradient, getProjectStatusColors } from '@/styles/utils';
 
 interface ProjectCardProps {
   project: ProjectFlat;
@@ -10,42 +11,8 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
-  // Get gradient based on funding agency
-  const getGradient = (agency?: string) => {
-    if (!agency) return 'from-ufam-dark to-black';
-
-    const agencyLower = agency.toLowerCase();
-    if (agencyLower.includes('fapeam')) return 'from-ufam-primary to-black';
-    if (agencyLower.includes('serrapilheira')) return 'from-[#7C7F87] to-black';
-    if (agencyLower.includes('samsung')) return 'from-blue-900 to-slate-900';
-    if (agencyLower.includes('cnpq')) return 'from-emerald-900 to-black';
-    if (agencyLower.includes('capes')) return 'from-amber-900 to-black';
-    if (agencyLower.includes('finep')) return 'from-purple-900 to-black';
-
-    return 'from-ufam-dark to-black';
-  };
-
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Em Andamento':
-      case 'active':
-        return {
-          color: 'bg-green-500/20 text-green-400 border-green-500/30',
-          label: 'em andamento',
-        };
-      case 'Concluído':
-      case 'finished':
-        return { color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', label: 'concluído' };
-      case 'Planejado':
-      case 'planned':
-        return { color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', label: 'planejado' };
-      default:
-        return { color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', label: status };
-    }
-  };
-
-  const statusBadge = getStatusBadge(project.status);
+  const gradient = getFundingAgencyGradient(project.fundingAgency);
+  const statusColors = getProjectStatusColors(project.status);
 
   return (
     <Link
@@ -67,7 +34,7 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           />
         ) : (
           <div
-            className={`absolute inset-0 bg-gradient-to-br ${getGradient(project.fundingAgency)} 
+            className={`absolute inset-0 bg-gradient-to-br ${gradient} 
                         group-hover:scale-110 transition-transform duration-500`}
           />
         )}
@@ -84,9 +51,9 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
 
         {/* Status Badge */}
         <div
-          className={`absolute top-4 left-4 text-xs font-tech px-2 py-1 rounded border ${statusBadge.color}`}
+          className={`absolute top-4 left-4 text-xs font-tech px-2 py-1 rounded border ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
         >
-          {statusBadge.label}
+          {statusColors.label}
         </div>
 
         {/* Overlay on hover */}

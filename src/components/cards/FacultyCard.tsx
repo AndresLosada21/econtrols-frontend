@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { FacultyMemberFlat } from '@/types/strapi';
+import { getRoleColors } from '@/styles/utils';
 
 interface FacultyCardProps {
   member: FacultyMemberFlat;
@@ -9,17 +10,7 @@ interface FacultyCardProps {
 }
 
 export default function FacultyCard({ member, index = 0 }: FacultyCardProps) {
-  // Determine badge color based on role
-  const getBadgeColor = (role: string) => {
-    switch (role) {
-      case 'Líder':
-        return 'bg-ufam-primary/80 border-ufam-primary';
-      case 'Co-líder':
-        return 'bg-ufam-secondary/80 border-ufam-secondary';
-      default:
-        return 'bg-black/50 border-white/20';
-    }
-  };
+  const roleColors = getRoleColors(member.role);
 
   return (
     <Link
@@ -49,7 +40,7 @@ export default function FacultyCard({ member, index = 0 }: FacultyCardProps) {
         {/* Role Badge */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4">
           <span
-            className={`text-white font-tech text-xs px-2 py-1 rounded backdrop-blur border lowercase ${getBadgeColor(member.role)}`}
+            className={`text-white font-tech text-xs px-2 py-1 rounded backdrop-blur border lowercase ${roleColors.bg} ${roleColors.border}`}
           >
             {member.role}
           </span>
