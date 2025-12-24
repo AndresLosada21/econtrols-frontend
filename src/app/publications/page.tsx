@@ -148,26 +148,7 @@ export default async function PublicationsPage() {
         </section>
       ))}
 
-      {/* Google Scholar Link */}
-      {publications.length > 0 && (
-        <section className="py-12 bg-ufam-dark border-t border-white/5">
-          <div className="container mx-auto px-6 text-center">
-            <FadeIn>
-              <p className="text-ufam-secondary mb-4">
-                Veja nossa produção completa no Google Scholar
-              </p>
-              <a
-                href="https://scholar.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-ufam-primary font-tech text-sm hover:text-ufam-light transition-colors lowercase border-b border-ufam-primary/30 hover:border-ufam-light pb-1"
-              >
-                acessar google scholar →
-              </a>
-            </FadeIn>
-          </div>
-        </section>
-      )}
+      {/* TODO: Google Scholar Link - adicionar URL do perfil do grupo quando disponível */}
 
       {/* Empty State */}
       {publications.length === 0 && (

@@ -29,7 +29,6 @@ export default async function ProjectsPage() {
   );
 
   // Stats
-  const totalFunding = projects.reduce((acc, p) => acc + (p.fundingAgency ? 1 : 0), 0);
   const agencies = [...new Set(projects.map((p) => p.fundingAgency).filter(Boolean))];
 
   return (
