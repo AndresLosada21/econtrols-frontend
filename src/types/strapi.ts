@@ -170,11 +170,12 @@ export interface NewsItemAttributes {
   title: string;
   slug: string;
   excerpt?: string;
+  summary?: string;
   content: string;
   category: string;
   publishDate: string;
   isFeatured: boolean;
-  isPublished: boolean;
+  isPublished?: boolean;
   coverImage?: StrapiMedia;
   author?: StrapiResponse<StrapiData<FacultyMemberAttributes>>;
   tags?: StrapiResponse<StrapiData<TagAttributes>[]>;

@@ -177,7 +177,7 @@ export function flattenNewsItem(data: StrapiData<NewsItemAttributes>): NewsItemF
     id,
     title: attributes.title,
     slug: attributes.slug,
-    excerpt: attributes.excerpt,
+    excerpt: attributes.excerpt || attributes.summary,
     category: attributes.category,
     publishDate: attributes.publishDate,
     isFeatured: attributes.isFeatured,
@@ -230,13 +230,25 @@ export async function getFacultyMembers(options: FetchOptions = {}): Promise<Fac
 }
 
 export async function getHomepageFacultyMembers(): Promise<FacultyMemberFlat[]> {
-  return getFacultyMembers({
+  // Try to get members marked for homepage first
+  const homepageMembers = await getFacultyMembers({
     filters: {
       showOnHomepage: { $eq: true },
       isActive: { $eq: true },
     },
     sort: ['displayOrder:asc'],
   });
+
+  // If no members marked for homepage, return first 4 active members
+  if (homepageMembers.length === 0) {
+    return getFacultyMembers({
+      filters: { isActive: { $eq: true } },
+      sort: ['displayOrder:asc'],
+      pagination: { pageSize: 4 },
+    });
+  }
+
+  return homepageMembers;
 }
 
 export async function getFacultyMemberBySlug(slug: string): Promise<FacultyMemberFlat | null> {
@@ -294,11 +306,22 @@ export async function getProjects(options: FetchOptions = {}): Promise<ProjectFl
 }
 
 export async function getHomepageProjects(): Promise<ProjectFlat[]> {
-  return getProjects({
+  // Try to get projects marked for homepage first
+  const homepageProjects = await getProjects({
     filters: { showOnHomepage: { $eq: true } },
     sort: ['displayOrder:asc'],
     pagination: { pageSize: 6 },
   });
+
+  // If no projects marked for homepage, return first 6 projects
+  if (homepageProjects.length === 0) {
+    return getProjects({
+      sort: ['startDate:desc'],
+      pagination: { pageSize: 6 },
+    });
+  }
+
+  return homepageProjects;
 }
 
 export async function getProjectBySlug(slug: string): Promise<ProjectFlat | null> {
@@ -327,11 +350,22 @@ export async function getPublications(options: FetchOptions = {}): Promise<Publi
 }
 
 export async function getFeaturedPublications(): Promise<PublicationFlat[]> {
-  return getPublications({
+  // Try to get featured publications first
+  const featured = await getPublications({
     filters: { isFeatured: { $eq: true } },
     sort: ['year:desc', 'citationCount:desc'],
     pagination: { pageSize: 5 },
   });
+
+  // If no featured publications, return most recent ones
+  if (featured.length === 0) {
+    return getPublications({
+      sort: ['year:desc', 'citationCount:desc'],
+      pagination: { pageSize: 5 },
+    });
+  }
+
+  return featured;
 }
 
 export async function getPublicationBySlug(slug: string): Promise<PublicationFlat | null> {
@@ -354,7 +388,6 @@ export async function getNewsItems(options: FetchOptions = {}): Promise<NewsItem
   const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>[]>>('news-items', {
     populate: ['coverImage', 'author', 'tags'],
     sort: ['publishDate:desc'],
-    filters: { isPublished: { $eq: true } },
     ...options,
   });
   return response.data.map(flattenNewsItem);

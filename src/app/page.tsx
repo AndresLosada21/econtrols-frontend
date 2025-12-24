@@ -6,6 +6,8 @@ import {
   getHomepageProjects,
   getHomepageAlumni,
   getFeaturedPublications,
+  getPartners,
+  getLatestNews,
 } from '@/lib/strapi';
 import type {
   ResearchLineFlat,
@@ -13,6 +15,8 @@ import type {
   ProjectFlat,
   AlumnusFlat,
   PublicationFlat,
+  PartnerFlat,
+  NewsItemFlat,
 } from '@/types/strapi';
 import Hero from '@/components/sections/Hero';
 import ResearchLines from '@/components/sections/ResearchLines';
@@ -30,15 +34,20 @@ export default async function Home() {
   let projects: ProjectFlat[] = [];
   let alumni: AlumnusFlat[] = [];
   let publications: PublicationFlat[] = [];
+  let partners: PartnerFlat[] = [];
+  let news: NewsItemFlat[] = [];
 
   try {
-    [researchLines, facultyMembers, projects, alumni, publications] = await Promise.all([
-      getResearchLines(),
-      getHomepageFacultyMembers(),
-      getHomepageProjects(),
-      getHomepageAlumni(),
-      getFeaturedPublications(),
-    ]);
+    [researchLines, facultyMembers, projects, alumni, publications, partners, news] =
+      await Promise.all([
+        getResearchLines(),
+        getHomepageFacultyMembers(),
+        getHomepageProjects(),
+        getHomepageAlumni(),
+        getFeaturedPublications(),
+        getPartners(),
+        getLatestNews(3),
+      ]);
   } catch (error) {
     console.error('Error fetching data from Strapi:', error);
   }
@@ -313,17 +322,37 @@ export default async function Home() {
 
           <FadeIn
             delay={200}
-            className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60"
+            className="flex flex-wrap justify-center items-center gap-8 md:gap-12"
           >
-            {/* Placeholder logos - will be replaced with real partner logos */}
-            {['Oxford', 'Cambridge', 'Manchester', 'TU Delft', 'INRIA'].map((partner) => (
-              <div
-                key={partner}
-                className="text-white/50 font-tech text-lg hover:text-white transition-colors cursor-pointer"
-              >
-                {partner}
-              </div>
-            ))}
+            {partners.length > 0 ? (
+              partners.slice(0, 6).map((partner) => (
+                <a
+                  key={partner.id}
+                  href={partner.websiteUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-2"
+                >
+                  {partner.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={partner.logoUrl}
+                      alt={partner.name}
+                      className="h-12 w-auto opacity-60 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
+                    />
+                  ) : (
+                    <span className="text-white/50 font-tech text-lg group-hover:text-white transition-colors">
+                      {partner.name}
+                    </span>
+                  )}
+                  <span className="text-xs text-ufam-secondary/50 group-hover:text-ufam-secondary transition-colors">
+                    {partner.country}
+                  </span>
+                </a>
+              ))
+            ) : (
+              <p className="text-ufam-secondary">Conecte ao Strapi para ver os parceiros.</p>
+            )}
           </FadeIn>
 
           <FadeIn delay={300} className="text-center mt-8">
@@ -411,9 +440,52 @@ export default async function Home() {
             </Link>
           </FadeIn>
 
-          <FadeIn className="text-center py-12 text-ufam-secondary">
-            <p>Conecte ao Strapi para ver as notícias.</p>
-          </FadeIn>
+          {news.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {news.map((item, index) => (
+                <FadeIn key={item.id} delay={index * 100}>
+                  <Link
+                    href={`/news/${item.slug || item.id}`}
+                    className="group block bg-ufam-dark border border-white/5 rounded overflow-hidden hover:border-ufam-primary/30 transition-all"
+                  >
+                    {item.coverImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.coverImageUrl}
+                        alt={item.title}
+                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gradient-to-br from-ufam-primary/20 to-ufam-dark" />
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-tech text-ufam-primary lowercase">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-ufam-secondary">
+                          {item.publishDate &&
+                            new Date(item.publishDate).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <h4 className="font-tech font-bold text-white group-hover:text-ufam-light transition-colors line-clamp-2">
+                        {item.title}
+                      </h4>
+                      {item.excerpt && (
+                        <p className="text-sm text-ufam-secondary mt-2 line-clamp-2">
+                          {item.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                </FadeIn>
+              ))}
+            </div>
+          ) : (
+            <FadeIn className="text-center py-12 text-ufam-secondary">
+              <p>Conecte ao Strapi para ver as notícias.</p>
+            </FadeIn>
+          )}
         </div>
       </section>
     </>
