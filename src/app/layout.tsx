@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Orbitron } from 'next/font/google';
 import './globals.css';
 import { Header, Footer } from '@/components/layout';
-import { getLayoutData } from '@/lib/strapi';
+import { getNavbarData, getFooterData } from '@/lib/strapi';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,17 +37,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch layout data from Strapi
-  const layoutData = await getLayoutData();
+  // Fetch navbar and footer data in parallel
+  const [navbarData, footerData] = await Promise.all([getNavbarData(), getFooterData()]);
 
   return (
     <html lang="pt-br" className={`scroll-smooth ${inter.variable} ${orbitron.variable}`}>
       <body
         className={`${inter.className} antialiased selection:bg-ufam-primary selection:text-white`}
       >
-        <Header layoutData={layoutData} />
+        <Header data={navbarData} />
         <main>{children}</main>
-        <Footer layoutData={layoutData} />
+        <Footer data={footerData} />
       </body>
     </html>
   );

@@ -4,31 +4,24 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
-import type { LayoutData } from '@/types/strapi';
-
-// Default nav links (fallback)
-const defaultNavLinks = [
-  { id: 1, url: '/research', label: '/pesquisa', isExternal: false },
-  { id: 2, url: '/people', label: '/equipe', isExternal: false },
-  { id: 3, url: '/projects', label: '/projetos', isExternal: false },
-  { id: 4, url: '/partners', label: '/parceiros', isExternal: false },
-  { id: 5, url: '/publications', label: '/publicações', isExternal: false },
-  { id: 6, url: '/news', label: '/notícias', isExternal: false },
-];
+import type { NavbarData } from '@/types/strapi';
 
 interface HeaderProps {
-  layoutData?: LayoutData | null;
+  data?: NavbarData | null;
 }
 
-export default function Header({ layoutData }: HeaderProps) {
+export default function Header({ data }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Use data from Strapi or fallback to defaults
-  const navLinks = layoutData?.mainMenu?.filter((item) => item.url !== '/') || defaultNavLinks;
-  const groupName = layoutData?.groupName || 'e-Controls';
-  const logoUrl = layoutData?.logoUrl;
-  const logoAlt = layoutData?.logoAlt || 'e-Controls Logo';
+  const logoUrl = data?.logoUrl;
+  const logoAlt = data?.logoAlt || 'e-Controls Logo';
+  const siteName = data?.siteName || 'e-Controls';
+  const mainMenu = data?.mainMenu || [];
+  const ctaButton = data?.ctaButton;
+  const isSticky = data?.isSticky ?? true;
+  const transparentOnTop = data?.transparentOnTop ?? true;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,16 +54,31 @@ export default function Header({ layoutData }: HeaderProps) {
             <span className="absolute w-full h-full border-2 border-ufam-primary rounded-r-lg border-l-0"></span>
             <span className="w-2 h-2 bg-ufam-secondary rounded-full absolute left-0"></span>
           </div>
-          {groupName}
+          {siteName}
         </>
       )}
     </Link>
   );
 
+  // Get button styles based on variant
+  const getButtonStyles = (variant?: string) => {
+    switch (variant) {
+      case 'primary':
+        return 'bg-ufam-primary text-white hover:bg-ufam-primary/80';
+      case 'secondary':
+        return 'bg-ufam-secondary text-white hover:bg-ufam-secondary/80';
+      case 'ghost':
+        return 'text-ufam-primary hover:bg-ufam-primary/10';
+      case 'outline':
+      default:
+        return 'border border-ufam-primary/50 text-ufam-primary hover:bg-ufam-primary hover:text-white';
+    }
+  };
+
   return (
     <nav
-      className={`fixed w-full z-50 top-0 transition-all duration-300 border-b border-white/5 ${
-        isScrolled ? 'bg-ufam-bg/90 backdrop-blur-lg' : 'backdrop-blur-md'
+      className={`${isSticky ? 'fixed' : 'relative'} w-full z-50 top-0 transition-all duration-300 border-b border-white/5 ${
+        isScrolled || !transparentOnTop ? 'bg-ufam-bg/90 backdrop-blur-lg' : 'backdrop-blur-md'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
@@ -79,7 +87,7 @@ export default function Header({ layoutData }: HeaderProps) {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex gap-6 font-tech text-xs text-ufam-secondary tracking-widest">
-          {navLinks.map((link) =>
+          {mainMenu.map((link) =>
             link.isExternal ? (
               <a
                 key={link.id}
@@ -102,13 +110,25 @@ export default function Header({ layoutData }: HeaderProps) {
           )}
         </div>
 
-        {/* Contact Button */}
-        <Link
-          href="#contact"
-          className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all lowercase"
-        >
-          contato
-        </Link>
+        {/* CTA Button */}
+        {ctaButton?.isVisible &&
+          (ctaButton.isExternal ? (
+            <a
+              href={ctaButton.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`hidden sm:block px-6 py-2 rounded font-tech text-xs transition-all lowercase ${getButtonStyles(ctaButton.variant)}`}
+            >
+              {ctaButton.label}
+            </a>
+          ) : (
+            <Link
+              href={ctaButton.url}
+              className={`hidden sm:block px-6 py-2 rounded font-tech text-xs transition-all lowercase ${getButtonStyles(ctaButton.variant)}`}
+            >
+              {ctaButton.label}
+            </Link>
+          ))}
 
         {/* Mobile Menu Button */}
         <button
@@ -124,7 +144,7 @@ export default function Header({ layoutData }: HeaderProps) {
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-ufam-bg/95 backdrop-blur-lg border-t border-white/5">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            {navLinks.map((link) =>
+            {mainMenu.map((link) =>
               link.isExternal ? (
                 <a
                   key={link.id}
@@ -147,13 +167,26 @@ export default function Header({ layoutData }: HeaderProps) {
                 </Link>
               )
             )}
-            <Link
-              href="#contact"
-              className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              contato
-            </Link>
+            {ctaButton?.isVisible &&
+              (ctaButton.isExternal ? (
+                <a
+                  href={ctaButton.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-block px-6 py-2 rounded font-tech text-xs text-center transition-all lowercase ${getButtonStyles(ctaButton.variant)}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {ctaButton.label}
+                </a>
+              ) : (
+                <Link
+                  href={ctaButton.url}
+                  className={`inline-block px-6 py-2 rounded font-tech text-xs text-center transition-all lowercase ${getButtonStyles(ctaButton.variant)}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {ctaButton.label}
+                </Link>
+              ))}
           </div>
         </div>
       )}
