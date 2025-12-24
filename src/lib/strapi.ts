@@ -21,6 +21,7 @@ import type {
   NewsItemFlat,
   SoftwareToolFlat,
   PartnerFlat,
+  AlumnusFlat,
 } from '@/types/strapi';
 
 // ============================================
@@ -424,15 +425,38 @@ export async function getInternationalPartners(): Promise<PartnerFlat[]> {
 // API Functions - Alumni
 // ============================================
 
-export async function getAlumni(
-  options: FetchOptions = {}
-): Promise<StrapiData<AlumnusAttributes>[]> {
+export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    fullName: attributes.fullName,
+    degreeLevel: attributes.degreeLevel,
+    thesisTitle: attributes.thesisTitle,
+    advisor: attributes.advisor,
+    defenseYear: attributes.defenseYear,
+    currentPosition: attributes.currentPosition,
+    currentInstitution: attributes.currentInstitution,
+    currentSector: attributes.currentSector,
+    linkedinUrl: attributes.linkedinUrl,
+    lattesUrl: attributes.lattesUrl,
+    photoUrl: getStrapiMediaUrl(attributes.photo?.data?.attributes?.url),
+  };
+}
+
+export async function getAlumni(options: FetchOptions = {}): Promise<AlumnusFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<AlumnusAttributes>[]>>('alumni', {
     populate: ['photo'],
     sort: ['defenseYear:desc', 'fullName:asc'],
     ...options,
   });
-  return response.data;
+  return response.data.map(flattenAlumnus);
+}
+
+export async function getHomepageAlumni(limit: number = 4): Promise<AlumnusFlat[]> {
+  return getAlumni({
+    pagination: { pageSize: limit },
+    sort: ['defenseYear:desc'],
+  });
 }
 
 // ============================================

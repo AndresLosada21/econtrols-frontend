@@ -425,3 +425,18 @@ export interface PartnerFlat {
   isActive: boolean;
   logoUrl?: string;
 }
+
+export interface AlumnusFlat {
+  id: number;
+  fullName: string;
+  degreeLevel: string;
+  thesisTitle?: string;
+  advisor?: string;
+  defenseYear?: number;
+  currentPosition?: string;
+  currentInstitution?: string;
+  currentSector?: string;
+  linkedinUrl?: string;
+  lattesUrl?: string;
+  photoUrl?: string;
+}

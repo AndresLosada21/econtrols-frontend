@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { getResearchLines, getHomepageFacultyMembers, getHomepageProjects } from '@/lib/strapi';
-import type { ResearchLineFlat, FacultyMemberFlat, ProjectFlat } from '@/types/strapi';
+import {
+  getResearchLines,
+  getHomepageFacultyMembers,
+  getHomepageProjects,
+  getHomepageAlumni,
+} from '@/lib/strapi';
+import type { ResearchLineFlat, FacultyMemberFlat, ProjectFlat, AlumnusFlat } from '@/types/strapi';
 import Hero from '@/components/sections/Hero';
 import ResearchLines from '@/components/sections/ResearchLines';
 import { FadeIn } from '@/components/effects/FadeIn';
@@ -11,12 +16,14 @@ export default async function Home() {
   let researchLines: ResearchLineFlat[] = [];
   let facultyMembers: FacultyMemberFlat[] = [];
   let projects: ProjectFlat[] = [];
+  let alumni: AlumnusFlat[] = [];
 
   try {
-    [researchLines, facultyMembers, projects] = await Promise.all([
+    [researchLines, facultyMembers, projects, alumni] = await Promise.all([
       getResearchLines(),
       getHomepageFacultyMembers(),
       getHomepageProjects(),
+      getHomepageAlumni(),
     ]);
   } catch (error) {
     console.error('Error fetching data from Strapi:', error);
@@ -213,6 +220,96 @@ export default async function Home() {
                 <p className="text-ufam-secondary">
                   Conecte ao Strapi para ver os membros da equipe.
                 </p>
+              </FadeIn>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Alumni Preview */}
+      <section className="py-24 bg-ufam-dark border-t border-white/5 relative z-10">
+        <div className="container mx-auto px-6">
+          <FadeIn className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+            <div>
+              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
+                {'/// egressos'}
+              </h2>
+              <h3 className="text-3xl md:text-4xl font-bold text-white font-tech">Alumni</h3>
+              <p className="text-ufam-secondary mt-2 max-w-xl">
+                Nossos egressos atuam em universidades, indústrias e centros de pesquisa ao redor do
+                mundo.
+              </p>
+            </div>
+            <Link
+              href="/people/alumni"
+              className="group inline-flex items-center gap-2 text-ufam-primary font-tech text-sm hover:text-ufam-light transition-colors lowercase"
+            >
+              ver todos os egressos
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {alumni.length > 0 ? (
+              alumni.slice(0, 4).map((alum, index) => (
+                <FadeIn key={alum.id} delay={index * 100}>
+                  <div className="bg-ufam-bg border border-white/10 p-6 rounded hover:border-ufam-primary/50 transition-all group h-full">
+                    <div className="flex items-start gap-4 mb-4">
+                      {alum.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={alum.photoUrl}
+                          alt={alum.fullName}
+                          className="w-12 h-12 rounded-full object-cover border border-ufam-primary/30"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-ufam-primary/20 to-ufam-dark flex items-center justify-center border border-ufam-primary/30">
+                          <span className="text-lg font-tech text-ufam-primary/70">
+                            {alum.fullName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-bold font-tech group-hover:text-ufam-light transition-colors truncate">
+                          {alum.fullName}
+                        </h4>
+                        <span className="text-xs font-tech text-ufam-primary lowercase">
+                          {alum.degreeLevel} {alum.defenseYear && `• ${alum.defenseYear}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {alum.currentPosition && (
+                      <p className="text-ufam-secondary text-sm mb-2">{alum.currentPosition}</p>
+                    )}
+
+                    {alum.currentInstitution && (
+                      <p className="text-xs text-ufam-light/70 font-tech lowercase">
+                        {alum.currentInstitution}
+                      </p>
+                    )}
+
+                    {alum.currentSector && (
+                      <span
+                        className={`text-xs font-tech px-2 py-1 rounded mt-3 inline-block ${
+                          alum.currentSector === 'Academia'
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : alum.currentSector === 'Indústria'
+                              ? 'bg-green-500/20 text-green-400'
+                              : alum.currentSector === 'Governo'
+                                ? 'bg-purple-500/20 text-purple-400'
+                                : 'bg-orange-500/20 text-orange-400'
+                        }`}
+                      >
+                        {alum.currentSector.toLowerCase()}
+                      </span>
+                    )}
+                  </div>
+                </FadeIn>
+              ))
+            ) : (
+              <FadeIn className="col-span-full text-center py-12">
+                <p className="text-ufam-secondary">Conecte ao Strapi para ver os egressos.</p>
               </FadeIn>
             )}
           </div>
