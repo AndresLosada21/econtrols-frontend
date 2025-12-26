@@ -2,7 +2,6 @@ import qs from 'qs';
 import type {
   StrapiResponse,
   StrapiData,
-  StrapiMedia,
   FacultyMemberAttributes,
   ResearchLineAttributes,
   ProjectAttributes,
@@ -23,15 +22,6 @@ import type {
   SoftwareToolFlat,
   PartnerFlat,
   AlumnusFlat,
-  // Layout types
-  NavbarData,
-  FooterData,
-  LayoutData,
-  MenuLink,
-  SocialLink,
-  ContactInfo,
-  FooterMenuColumn,
-  CtaButton,
 } from '@/types/strapi';
 
 // ============================================
@@ -572,202 +562,33 @@ export async function getHomepageSettings(): Promise<HomepageSettingAttributes |
 }
 
 // ============================================
-// API Functions - Navbar Settings
+// Navbar Settings
 // ============================================
 
-// Default navbar values
-const defaultNavbar: NavbarData = {
-  logoUrl: undefined,
-  logoAlt: 'e-Controls Logo',
-  siteName: 'e-Controls',
-  mainMenu: [
-    { id: 1, order: 1, label: '/pesquisa', url: '/research', isExternal: false },
-    { id: 2, order: 2, label: '/equipe', url: '/people', isExternal: false },
-    { id: 3, order: 3, label: '/projetos', url: '/projects', isExternal: false },
-    { id: 4, order: 4, label: '/parceiros', url: '/partners', isExternal: false },
-    { id: 5, order: 5, label: '/publicações', url: '/publications', isExternal: false },
-    { id: 6, order: 6, label: '/notícias', url: '/news', isExternal: false },
-  ],
-  ctaButton: {
-    id: 1,
-    label: 'contato',
-    url: '#contact',
-    isExternal: false,
-    variant: 'outline',
-    isVisible: true,
-  },
-  showSearch: false,
-  isSticky: true,
-  transparentOnTop: true,
-};
-
-// Default footer values
-const defaultFooter: FooterData = {
-  logoUrl: undefined,
-  logoAlt: 'e-Controls Logo',
-  siteName: 'e-Controls',
-  description: undefined,
-  institutionName: 'Universidade Federal do Amazonas (UFAM)',
-  departmentName: 'Departamento de Eletricidade - Faculdade de Tecnologia',
-  contactInfo: {
-    id: 1,
-    email: 'iurybessa@ufam.edu.br',
-    phone: '+55 92 3305-1181',
-    address: 'Av. General Rodrigo Otávio, 6200',
-    city: 'Manaus',
-    state: 'AM',
-    postalCode: '69077-000',
-    country: 'Brasil',
-  },
-  socialLinks: [
-    { id: 1, platform: 'LinkedIn', url: '#', label: 'LinkedIn' },
-    { id: 2, platform: 'GitHub', url: '#', label: 'GitHub' },
-  ],
-  menuColumns: [
-    {
-      id: 1,
-      title: 'menu',
-      order: 1,
-      links: [
-        { id: 1, label: 'overview', url: '/', order: 1, isExternal: false },
-        { id: 2, label: 'pesquisa', url: '/research', order: 2, isExternal: false },
-        { id: 3, label: 'equipe', url: '/people', order: 3, isExternal: false },
-        { id: 4, label: 'projetos', url: '/projects', order: 4, isExternal: false },
-        { id: 5, label: 'publicações', url: '/publications', order: 5, isExternal: false },
-        { id: 6, label: 'portal ufam', url: 'https://ufam.edu.br', order: 6, isExternal: true },
-      ],
-    },
-  ],
-  copyrightText: 'e-Controls Research Group. Todos os direitos reservados.',
-  bottomText: 'Desenvolvido com ❤️ na Amazônia.',
-  showNewsletter: false,
-};
-
-export async function getNavbarData(): Promise<NavbarData> {
+export async function getNavbarSettings(): Promise<any> {
   try {
-    const response = await fetchAPI<{
-      data: {
-        id: number;
-        attributes: {
-          logo?: StrapiMedia;
-          logoAlt?: string;
-          siteName?: string;
-          mainMenu?: MenuLink[];
-          ctaButton?: CtaButton;
-          showSearch?: boolean;
-          isSticky?: boolean;
-          transparentOnTop?: boolean;
-        };
-      };
-    }>('navbar-setting', {
-      populate: ['logo', 'mainMenu', 'ctaButton'],
+    const response = await fetchAPI<{ data: { id: number; attributes: any } }>('navbar-setting', {
+      populate: '*',
     });
-
-    const attrs = response.data?.attributes;
-    if (!attrs) return defaultNavbar;
-
-    // Sort and format menu items
-    const mainMenu =
-      attrs.mainMenu
-        ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((item) => ({
-          ...item,
-          label: item.label.startsWith('/') ? item.label : `/${item.label.toLowerCase()}`,
-        })) || defaultNavbar.mainMenu;
-
-    return {
-      logoUrl: getStrapiMediaUrl(attrs.logo?.data?.attributes?.url),
-      logoAlt: attrs.logoAlt || defaultNavbar.logoAlt,
-      siteName: attrs.siteName || defaultNavbar.siteName,
-      mainMenu,
-      ctaButton: attrs.ctaButton || defaultNavbar.ctaButton,
-      showSearch: attrs.showSearch ?? defaultNavbar.showSearch,
-      isSticky: attrs.isSticky ?? defaultNavbar.isSticky,
-      transparentOnTop: attrs.transparentOnTop ?? defaultNavbar.transparentOnTop,
-    };
+    return response.data?.attributes || null;
   } catch (error) {
-    console.error('Error fetching navbar data:', error);
-    return defaultNavbar;
+    console.error('Error fetching navbar settings:', error);
+    return null;
   }
 }
 
 // ============================================
-// API Functions - Footer Settings
+// Footer Settings
 // ============================================
 
-export async function getFooterData(): Promise<FooterData> {
+export async function getFooterSettings(): Promise<any> {
   try {
-    const response = await fetchAPI<{
-      data: {
-        id: number;
-        attributes: {
-          logo?: StrapiMedia;
-          logoAlt?: string;
-          siteName?: string;
-          description?: string;
-          institutionName?: string;
-          departmentName?: string;
-          contactInfo?: ContactInfo;
-          socialLinks?: SocialLink[];
-          menuColumns?: FooterMenuColumn[];
-          copyrightText?: string;
-          bottomText?: string;
-          showNewsletter?: boolean;
-          newsletterTitle?: string;
-          newsletterDescription?: string;
-        };
-      };
-    }>('footer-setting', {
-      populate: {
-        logo: true,
-        contactInfo: true,
-        socialLinks: true,
-        menuColumns: {
-          populate: ['links'],
-        },
-      },
+    const response = await fetchAPI<{ data: { id: number; attributes: any } }>('footer-setting', {
+      populate: '*',
     });
-
-    const attrs = response.data?.attributes;
-    if (!attrs) return defaultFooter;
-
-    // Sort menu columns and their links
-    const menuColumns =
-      attrs.menuColumns
-        ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((col) => ({
-          ...col,
-          links: col.links?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [],
-        })) || defaultFooter.menuColumns;
-
-    return {
-      logoUrl: getStrapiMediaUrl(attrs.logo?.data?.attributes?.url),
-      logoAlt: attrs.logoAlt || defaultFooter.logoAlt,
-      siteName: attrs.siteName || defaultFooter.siteName,
-      description: attrs.description,
-      institutionName: attrs.institutionName || defaultFooter.institutionName,
-      departmentName: attrs.departmentName || defaultFooter.departmentName,
-      contactInfo: attrs.contactInfo || defaultFooter.contactInfo,
-      socialLinks: attrs.socialLinks || defaultFooter.socialLinks,
-      menuColumns,
-      copyrightText: attrs.copyrightText || defaultFooter.copyrightText,
-      bottomText: attrs.bottomText || defaultFooter.bottomText,
-      showNewsletter: attrs.showNewsletter ?? defaultFooter.showNewsletter,
-      newsletterTitle: attrs.newsletterTitle,
-      newsletterDescription: attrs.newsletterDescription,
-    };
+    return response.data?.attributes || null;
   } catch (error) {
-    console.error('Error fetching footer data:', error);
-    return defaultFooter;
+    console.error('Error fetching footer settings:', error);
+    return null;
   }
-}
-
-// ============================================
-// API Functions - Combined Layout Data
-// ============================================
-
-export async function getLayoutData(): Promise<LayoutData> {
-  const [navbar, footer] = await Promise.all([getNavbarData(), getFooterData()]);
-
-  return { navbar, footer };
 }

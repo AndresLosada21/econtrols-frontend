@@ -309,30 +309,18 @@ export interface HomepageSettingAttributes {
   mainContactEmail?: string;
   phone?: string;
   address?: string;
-  siteLogo?: StrapiMedia;
-  siteLogoAlt?: string;
-  footerDescription?: string;
   keyMetrics?: {
-    id: number;
-    order: number;
-    label: string;
-    value: string;
-    icon?: string;
-  }[];
+    publications: number;
+    citations: number;
+    mastersFormed: number;
+    internationalPartnerships: number;
+  };
   socialLinks?: {
-    id: number;
-    platform: string;
-    url: string;
-    label: string;
-  }[];
-  mainMenu?: {
-    id: number;
-    order: number;
-    label: string;
-    url: string;
-    isExternal: boolean;
-    icon?: string;
-  }[];
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    youtube?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -455,93 +443,4 @@ export interface AlumnusFlat {
   linkedinUrl?: string;
   lattesUrl?: string;
   photoUrl?: string;
-}
-
-// ============================================
-// Layout Types (Navbar & Footer)
-// ============================================
-
-// Menu Link Component
-export interface MenuLink {
-  id: number;
-  label: string;
-  url: string;
-  order: number;
-  isExternal: boolean;
-  icon?: string;
-}
-
-// CTA Button Component
-export interface CtaButton {
-  id: number;
-  label: string;
-  url: string;
-  isExternal: boolean;
-  variant: 'primary' | 'secondary' | 'outline' | 'ghost';
-  isVisible: boolean;
-}
-
-// Social Link Component
-export interface SocialLink {
-  id: number;
-  platform: string;
-  url: string;
-  label?: string;
-}
-
-// Contact Info Component
-export interface ContactInfo {
-  id: number;
-  email: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-  mapUrl?: string;
-}
-
-// Footer Menu Column Component
-export interface FooterMenuColumn {
-  id: number;
-  title: string;
-  order: number;
-  links: MenuLink[];
-}
-
-// Navbar Data (from navbar-setting Single Type)
-export interface NavbarData {
-  logoUrl?: string;
-  logoAlt: string;
-  siteName: string;
-  mainMenu: MenuLink[];
-  ctaButton?: CtaButton;
-  showSearch: boolean;
-  isSticky: boolean;
-  transparentOnTop: boolean;
-}
-
-// Footer Data (from footer-setting Single Type)
-export interface FooterData {
-  logoUrl?: string;
-  logoAlt: string;
-  siteName: string;
-  description?: string;
-  institutionName: string;
-  departmentName: string;
-  contactInfo?: ContactInfo;
-  socialLinks: SocialLink[];
-  menuColumns: FooterMenuColumn[];
-  copyrightText: string;
-  bottomText?: string;
-  showNewsletter: boolean;
-  newsletterTitle?: string;
-  newsletterDescription?: string;
-}
-
-// Legacy LayoutData (kept for backwards compatibility)
-export interface LayoutData {
-  navbar: NavbarData;
-  footer: FooterData;
 }
