@@ -1,0 +1,836 @@
+import qs from 'qs';
+import type {
+  StrapiResponse,
+  StrapiData,
+  FacultyMemberAttributes,
+  ResearchLineAttributes,
+  ProjectAttributes,
+  PublicationAttributes,
+  NewsItemAttributes,
+  SoftwareToolAttributes,
+  PartnerAttributes,
+  CollaboratorAttributes,
+  AlumnusAttributes,
+  TagAttributes,
+  DashboardMetricAttributes,
+  HomepageSettingAttributes,
+  FacultyMemberFlat,
+  ResearchLineFlat,
+  ProjectFlat,
+  PublicationFlat,
+  NewsItemFlat,
+  SoftwareToolFlat,
+  PartnerFlat,
+  AlumnusFlat,
+} from '@/types/strapi';
+
+// ============================================
+// Configuration
+// ============================================
+
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+
+// ============================================
+// Base Fetch Function
+// ============================================
+
+interface FetchOptions {
+  populate?: string | object;
+  filters?: object;
+  sort?: string | string[];
+  pagination?: {
+    page?: number;
+    pageSize?: number;
+  };
+  fields?: string[];
+}
+
+async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  const { populate, filters, sort, pagination, fields } = options;
+
+  const queryParams = qs.stringify(
+    {
+      populate: populate || '*',
+      filters,
+      sort,
+      pagination,
+      fields,
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const url = `${STRAPI_URL}/api/${endpoint}${queryParams ? `?${queryParams}` : ''}`;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (STRAPI_API_TOKEN) {
+    headers.Authorization = `Bearer ${STRAPI_API_TOKEN}`;
+  }
+
+  const response = await fetch(url, {
+    headers,
+    next: { revalidate: 60 }, // Revalidate every 60 seconds
+  });
+
+  if (!response.ok) {
+    console.error(`Strapi API Error: ${response.status} - ${response.statusText}`);
+    throw new Error(`Failed to fetch data from Strapi: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// ============================================
+// Helper: Get Image URL
+// ============================================
+
+export function getStrapiMediaUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http')) return url;
+  return `${STRAPI_URL}${url}`;
+}
+
+// ============================================
+// Flatten Functions
+export function flattenFacultyMember(data: StrapiData<FacultyMemberAttributes>): FacultyMemberFlat {
+  const { attributes } = data;
+  const base = {
+    id: data.id,
+    fullName: attributes.fullName,
+    displayName: attributes.displayName,
+    slug: attributes.slug || String(data.id),
+    role: attributes.role,
+    email: attributes.email,
+    photo: attributes.photo?.data?.attributes?.url,
+    shortBio: attributes.shortBio,
+    googleScholarUrl: attributes.googleScholarUrl,
+    googleScholarCitations: attributes.googleScholarCitations,
+    hIndex: attributes.hIndex,
+    totalPublications: attributes.totalPublications,
+    lattesUrl: attributes.lattesUrl,
+    researchGateUrl: attributes.researchGateUrl,
+    orcidUrl: attributes.orcidUrl,
+    linkedinUrl: attributes.linkedinUrl,
+    personalWebsite: attributes.personalWebsite,
+    room: attributes.room,
+    bio: attributes.bio,
+    specializationAreas: attributes.specializationAreas || [],
+  };
+
+  return {
+    ...base,
+    phone: attributes.phone || '',
+    showOnHomepage: attributes.showOnHomepage,
+    isActive: attributes.isActive,
+    displayOrder: attributes.displayOrder,
+  };
+}
+
+export function flattenNewsItem(data: StrapiData<StrapiData<NewsItemAttributes>>): NewsItemFlat {
+  const { attributes } = data;
+  const base = {
+    id: data.id,
+    title: attributes.title,
+    slug: attributes.slug || String(data.id),
+    publishDate: attributes.publishDate,
+    category: attributes.category,
+    summary: attributes.summary,
+    content: attributes.content,
+    isFeatured: attributes.isFeatured,
+    isPinned: attributes.isPinned,
+    externalUrl: attributes.externalUrl,
+    eventDate: attributes.eventDate,
+    tags: attributes.tags?.data || [],
+    viewCount: attributes.viewCount || 0,
+    readingTime: attributes.readingTime || 0,
+  };
+
+  return { ...base };
+}
+
+export function flattenProject(data: StrapiData<StrapiData<ProjectAttributes>>): ProjectFlat {
+  const { attributes } = data;
+  const base = {
+    id: data.id,
+    title: attributes.title,
+    slug: attributes.slug || String(data.id),
+    shortDescription: attributes.shortDescription,
+    status: attributes.status,
+    fundingAgency: attributes.fundingAgency,
+    startDate: attributes.startDate,
+    endDate: attributes.endDate,
+    duration: attributes.duration,
+    fundingAmount: attributes.fundingAmount,
+    processNumber: attributes.processNumber,
+    currentStatus: attributes.currentStatus,
+    progressPercentage: attributes.progressPercentage || 0,
+    showOnHomepage: attributes.showOnHomepage,
+    displayOrder: attributes.displayOrder || 0,
+  };
+
+  return { ...base };
+}
+
+export function flattenPublication(
+  data: StrapiData<StrapiData<PublicationAttributes>>
+): PublicationFlat {
+  const { attributes } = data;
+  const base = {
+    id: data.id,
+    title: attributes.title,
+    slug: attributes.slug || String(data.id),
+    authorsText: attributes.authorsText,
+    year: attributes.year,
+    month: attributes.month,
+    abstract: attributes.abstract,
+    journalName: attributes.journalName,
+    conferenceName: attributes.conferenceName,
+    bookTitle: attributes.bookTitle,
+    volume: attributes.volume,
+    issue: attributes.issue,
+    pages: attributes.pages,
+    publisher: attributes.publisher,
+    doi: attributes.doi,
+    issnIsbn: attributes.issnIsbn,
+    keywords: attributes.keywords || [],
+    citationCount: attributes.citationCount || 0,
+    qualis: attributes.qualis,
+    impactFactor: attributes.impactFactor,
+    quartile: attributes.quartile,
+    pdfUrl: attributes.pdfUrl,
+    externalUrl: attributes.externalUrl,
+    repositoryUrl: attributes.repositoryUrl,
+    citationBibtex: attributes.citationBibtex || null,
+    citationApa: attributes.citationApa || null,
+    citationAbnt: attributes.citationAbnt || null,
+    publicationStatus: attributes.publicationStatus,
+    isFeatured: attributes.isFeatured,
+    isOpenAccess: attributes.isOpenAccess,
+    awardReceived: attributes.awardReceived,
+    datasetUrl: attributes.datasetUrl,
+    videoUrl: attributes.videoUrl,
+    viewCount: attributes.viewCount || 0,
+    downloadCount: attributes.downloadCount || 0,
+  };
+
+  return { ...base };
+}
+export async function getFacultyMembers(options: FetchOptions = {}): Promise<FacultyMemberFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<FacultyMemberAttributes>[]>>(
+    'faculty-members',
+    {
+      populate: ['photo', 'researchLines'],
+      sort: ['displayOrder:asc', 'fullName:asc'],
+      filters: { isActive: { $eq: true } },
+      ...options,
+    }
+  );
+
+  if (response.data.length === 0) return [];
+
+  return response.data.map(flattenFacultyMember);
+}
+
+export async function getNewsItemDetail(slug: string): Promise<NewsItemDetail | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>>>('news-items', {
+    filters: { slug: { $eq: slug } },
+    populate: ['coverImage', 'author', 'tags'],
+  });
+
+  if (response.data.length === 0) return null;
+
+  const { attributes } = response.data[0];
+  const author = attributes.author?.data ? flattenFacultyMember(attributes.author.data) : null;
+  const tags = attributes.tags?.data || [];
+
+  return {
+    id: response.data[0].id,
+    title: attributes.title,
+    slug: attributes.slug || String(response.data[0].id),
+    publishDate: attributes.publishDate,
+    category: attributes.category,
+    summary: attributes.summary,
+    content: attributes.content,
+    isFeatured: attributes.isFeatured,
+    isPinned: attributes.isPinned,
+    externalUrl: attributes.externalUrl,
+    eventDate: attributes.eventDate,
+    tags,
+    author,
+    viewCount: attributes.viewCount || 0,
+    readingTime: attributes.readingTime || 0,
+  };
+}
+
+export async function getNewsItems(options: FetchOptions = {}): Promise<NewsItemFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>[]>>('news-items', {
+    populate: ['coverImage'],
+    sort: ['publishDate:desc'],
+    filters: { isActive: { $eq: true } },
+    ...options,
+  });
+
+  if (response.data.length === 0) return [];
+
+  return response.data.map(flattenNewsItem);
+}
+
+export async function getPublications(options: FetchOptions = {}): Promise<PublicationFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PublicationAttributes>[]>>(
+    'publications',
+    {
+      populate: ['featuredImage'],
+      sort: ['publishDate:desc'],
+      filters: { isActive: { $eq: true } },
+      ...options,
+    }
+  );
+
+  if (response.data.length === 0) return [];
+
+  return response.data.map(flattenPublication);
+}
+
+export async function getProjects(options: FetchOptions = {}): Promise<ProjectFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectAttributes>[]>>('projects', {
+    populate: ['featuredImage', 'coordinator', 'researchLines'],
+    sort: ['displayOrder:asc', 'startDate:desc'],
+    filters: { isActive: { $eq: true } },
+    ...options,
+  });
+
+  if (response.data.length === 0) return [];
+
+  return response.data.map(flattenProject);
+}
+
+// Get project by slug
+export async function getProjectBySlug(slug: string): Promise<ProjectFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectAttributes>[]>>('projects', {
+    filters: { slug: { $eq: slug } },
+    populate: ['featuredImage', 'coordinator', 'researchLines', 'team'],
+  });
+
+  if (response.data.length === 0) return null;
+
+  return flattenProject(response.data[0]);
+}
+
+// Get project with full details
+export async function getProjectDetail(slug: string): Promise<any> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectAttributes>>>('projects', {
+    filters: { slug: { $eq: slug } },
+    populate: {
+      featuredImage: true,
+      coordinator: {
+        populate: ['photo'],
+      },
+      researchLines: {
+        populate: ['featuredImage'],
+      },
+      team: {
+        populate: ['photo'],
+      },
+      publications: true,
+    },
+  });
+
+  if (response.data.length === 0) return null;
+
+  const { attributes } = response.data[0];
+  const coordinator = attributes.coordinator?.data
+    ? flattenFacultyMember(attributes.coordinator.data)
+    : undefined;
+  const team = attributes.team?.data?.map((fm: StrapiData<StrapiData<FacultyMemberAttributes>>) =>
+    flattenFacultyMember(fm)
+  );
+
+  const base = flattenProject(response.data[0]);
+
+  const facultyMembers =
+    attributes.researchLines?.data?.map((rl: StrapiData<StrapiData<ResearchLineAttributes>>) =>
+      flattenResearchLine(rl)
+    ) || [];
+  const publications =
+    attributes.publications?.data?.map((p: StrapiData<StrapiData<PublicationAttributes>>) =>
+      flattenPublication(p)
+    ) || [];
+
+  return {
+    ...base,
+    coordinator,
+    team,
+    facultyMembers,
+    publications,
+  };
+}
+
+export function flattenResearchLine(data: StrapiData<ResearchLineAttributes>): ResearchLineFlat {
+  const { id, attributes } = data;
+  // Suporta tanto 'image' quanto 'featuredImage' do Strapi
+  const imageUrl =
+    getStrapiMediaUrl(attributes.featuredImage?.data?.attributes?.url) ||
+    getStrapiMediaUrl(attributes.image?.data?.attributes?.url);
+
+  return {
+    id,
+    title: attributes.title,
+    slug: attributes.slug,
+    shortDescription: attributes.shortDescription,
+    fullDescription: attributes.fullDescription,
+    category: attributes.category,
+    icon: attributes.icon,
+    iconName: attributes.iconName,
+    isActive: attributes.isActive,
+    displayOrder: attributes.displayOrder,
+    imageUrl,
+  };
+}
+
+export function flattenProject(data: StrapiData<ProjectAttributes>): ProjectFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    title: attributes.title,
+    slug: attributes.slug,
+    shortDescription: attributes.shortDescription,
+    status: attributes.status,
+    fundingAgency: attributes.fundingAgency,
+    startDate: attributes.startDate,
+    endDate: attributes.endDate,
+    showOnHomepage: attributes.showOnHomepage,
+    displayOrder: attributes.displayOrder,
+    featuredImageUrl: getStrapiMediaUrl(attributes.featuredImage?.data?.attributes?.url),
+  };
+}
+
+export function flattenPublication(data: StrapiData<PublicationAttributes>): PublicationFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    title: attributes.title,
+    slug: attributes.slug,
+    authorsText: attributes.authorsText,
+    publicationType: attributes.publicationType,
+    year: attributes.year,
+    journalName: attributes.journalName,
+    conferenceName: attributes.conferenceName,
+    doi: attributes.doi,
+    citationCount: attributes.citationCount,
+    isFeatured: attributes.isFeatured,
+  };
+}
+
+export function flattenNewsItem(data: StrapiData<NewsItemAttributes>): NewsItemFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    title: attributes.title,
+    slug: attributes.slug,
+    excerpt: attributes.excerpt || attributes.summary,
+    category: attributes.category,
+    publishDate: attributes.publishDate,
+    isFeatured: attributes.isFeatured,
+    coverImageUrl: getStrapiMediaUrl(attributes.coverImage?.data?.attributes?.url),
+  };
+}
+
+export function flattenSoftwareTool(data: StrapiData<SoftwareToolAttributes>): SoftwareToolFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    name: attributes.name,
+    slug: attributes.slug,
+    shortDescription: attributes.shortDescription,
+    repositoryUrl: attributes.repositoryUrl,
+    license: attributes.license,
+    isFeatured: attributes.isFeatured,
+    logoUrl: getStrapiMediaUrl(attributes.logo?.data?.attributes?.url),
+  };
+}
+
+export function flattenPartner(data: StrapiData<PartnerAttributes>): PartnerFlat {
+  const { id, attributes } = data;
+  return {
+    id,
+    name: attributes.name,
+    partnerType: attributes.partnerType,
+    country: attributes.country,
+    city: attributes.city,
+    websiteUrl: attributes.websiteUrl,
+    isActive: attributes.isActive,
+    logoUrl: getStrapiMediaUrl(attributes.logo?.data?.attributes?.url),
+  };
+}
+
+// ============================================
+// API Functions - Faculty Members
+// ============================================
+
+export async function getFacultyMembers(options: FetchOptions = {}): Promise<FacultyMemberFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<FacultyMemberAttributes>[]>>(
+    'faculty-members',
+    {
+      populate: ['photo', 'researchLines'],
+      sort: ['displayOrder:asc', 'fullName:asc'],
+      ...options,
+    }
+  );
+  return response.data.map(flattenFacultyMember);
+}
+
+export async function getHomepageFacultyMembers(): Promise<FacultyMemberFlat[]> {
+  // Try to get members marked for homepage first
+  const homepageMembers = await getFacultyMembers({
+    filters: {
+      showOnHomepage: { $eq: true },
+      isActive: { $eq: true },
+    },
+    sort: ['displayOrder:asc'],
+  });
+
+  // If no members marked for homepage, return first 4 active members
+  if (homepageMembers.length === 0) {
+    return getFacultyMembers({
+      filters: { isActive: { $eq: true } },
+      sort: ['displayOrder:asc'],
+      pagination: { pageSize: 4 },
+    });
+  }
+
+  return homepageMembers;
+}
+
+export async function getFacultyMemberBySlug(slug: string): Promise<FacultyMemberFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<FacultyMemberAttributes>[]>>(
+    'faculty-members',
+    {
+      filters: { slug: { $eq: slug } },
+      populate: ['photo', 'researchLines', 'publications'],
+    }
+  );
+  if (response.data.length === 0) return null;
+  return flattenFacultyMember(response.data[0]);
+}
+
+// ============================================
+// API Functions - Research Lines
+// ============================================
+
+export async function getResearchLines(options: FetchOptions = {}): Promise<ResearchLineFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ResearchLineAttributes>[]>>(
+    'research-lines',
+    {
+      populate: ['image', 'featuredImage', 'icon'],
+      sort: ['displayOrder:asc', 'title:asc'],
+      filters: { isActive: { $eq: true } },
+      ...options,
+    }
+  );
+  return response.data.map(flattenResearchLine);
+}
+
+export async function getResearchLineBySlug(slug: string): Promise<ResearchLineFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ResearchLineAttributes>[]>>(
+    'research-lines',
+    {
+      filters: { slug: { $eq: slug } },
+      populate: ['image', 'featuredImage', 'icon', 'facultyMembers', 'projects'],
+    }
+  );
+  if (response.data.length === 0) return null;
+  return flattenResearchLine(response.data[0]);
+}
+
+export async function getResearchLineDetail(slug: string): Promise<ResearchLineDetail | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ResearchLineAttributes>>>(
+    'research-lines',
+    {
+      filters: { slug: { $eq: slug } },
+      populate: {
+        image: true,
+        featuredImage: true,
+        icon: true,
+        facultyMembers: {
+          populate: ['photo'],
+        },
+        projects: {
+          populate: ['featuredImage', 'coordinator'],
+        },
+        publications: true,
+      },
+    }
+  );
+
+  if (response.data.length === 0) return null;
+
+  const { attributes } = response.data[0];
+  const facultyMembers =
+    attributes.facultyMembers?.data?.map((fm: StrapiData<StrapiData<FacultyMemberAttributes>>) =>
+      flattenFacultyMember(fm)
+    ) || [];
+  const projects =
+    attributes.projects?.data?.map((p: StrapiData<StrapiData<ProjectAttributes>>) =>
+      flattenProject(p)
+    ) || [];
+  const publications =
+    attributes.publications?.data?.map((p: StrapiData<StrapiData<PublicationAttributes>>) =>
+      flattenPublication(p)
+    ) || [];
+
+  const base = flattenResearchLine(response.data[0]);
+
+  return {
+    ...base,
+    facultyMembers,
+    projects,
+    publications,
+  };
+}
+
+// ============================================
+// API Functions - Projects
+// ============================================
+
+export async function getProjects(options: FetchOptions = {}): Promise<ProjectFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectAttributes>[]>>('projects', {
+    populate: ['featuredImage', 'coordinator', 'researchLines'],
+    sort: ['displayOrder:asc', 'startDate:desc'],
+    ...options,
+  });
+  return response.data.map(flattenProject);
+}
+
+export async function getHomepageProjects(): Promise<ProjectFlat[]> {
+  // Try to get projects marked for homepage first
+  const homepageProjects = await getProjects({
+    filters: { showOnHomepage: { $eq: true } },
+    sort: ['displayOrder:asc'],
+    pagination: { pageSize: 6 },
+  });
+
+  // If no projects marked for homepage, return first 6 projects
+  if (homepageProjects.length === 0) {
+    return getProjects({
+      sort: ['startDate:desc'],
+      pagination: { pageSize: 6 },
+    });
+  }
+
+  return homepageProjects;
+}
+
+export async function getProjectBySlug(slug: string): Promise<ProjectFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectAttributes>[]>>('projects', {
+    filters: { slug: { $eq: slug } },
+    populate: ['featuredImage', 'coordinator', 'researchLines', 'team'],
+  });
+  if (response.data.length === 0) return null;
+  return flattenProject(response.data[0]);
+}
+
+// ============================================
+// API Functions - Publications
+// ============================================
+
+export async function getPublications(options: FetchOptions = {}): Promise<PublicationFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PublicationAttributes>[]>>(
+    'publications',
+    {
+      populate: ['authors', 'researchLines'],
+      sort: ['year:desc', 'citationCount:desc'],
+      ...options,
+    }
+  );
+  return response.data.map(flattenPublication);
+}
+
+export async function getFeaturedPublications(): Promise<PublicationFlat[]> {
+  // Try to get featured publications first
+  const featured = await getPublications({
+    filters: { isFeatured: { $eq: true } },
+    sort: ['year:desc', 'citationCount:desc'],
+    pagination: { pageSize: 5 },
+  });
+
+  // If no featured publications, return most recent ones
+  if (featured.length === 0) {
+    return getPublications({
+      sort: ['year:desc', 'citationCount:desc'],
+      pagination: { pageSize: 5 },
+    });
+  }
+
+  return featured;
+}
+
+export async function getPublicationBySlug(slug: string): Promise<PublicationFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PublicationAttributes>[]>>(
+    'publications',
+    {
+      filters: { slug: { $eq: slug } },
+      populate: ['authors', 'researchLines'],
+    }
+  );
+  if (response.data.length === 0) return null;
+  return flattenPublication(response.data[0]);
+}
+
+// ============================================
+// API Functions - News Items
+// ============================================
+
+export async function getNewsItems(options: FetchOptions = {}): Promise<NewsItemFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>[]>>('news-items', {
+    populate: ['coverImage', 'author', 'tags'],
+    sort: ['publishDate:desc'],
+    ...options,
+  });
+  return response.data.map(flattenNewsItem);
+}
+
+export async function getLatestNews(limit: number = 3): Promise<NewsItemFlat[]> {
+  return getNewsItems({
+    pagination: { pageSize: limit },
+  });
+}
+
+export async function getNewsItemBySlug(slug: string): Promise<NewsItemFlat | null> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>[]>>('news-items', {
+    filters: { slug: { $eq: slug } },
+    populate: ['coverImage', 'author', 'tags'],
+  });
+  if (response.data.length === 0) return null;
+  return flattenNewsItem(response.data[0]);
+}
+
+// ============================================
+// API Functions - Software Tools
+// ============================================
+
+export async function getSoftwareTools(options: FetchOptions = {}): Promise<SoftwareToolFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<SoftwareToolAttributes>[]>>(
+    'software-tools',
+    {
+      populate: ['logo', 'maintainers'],
+      sort: ['name:asc'],
+      filters: { isActive: { $eq: true } },
+      ...options,
+    }
+  );
+  return response.data.map(flattenSoftwareTool);
+}
+
+export async function getFeaturedTools(): Promise<SoftwareToolFlat[]> {
+  return getSoftwareTools({
+    filters: { isFeatured: { $eq: true }, isActive: { $eq: true } },
+  });
+}
+
+// ============================================
+// API Functions - Partners
+// ============================================
+
+export async function getPartners(options: FetchOptions = {}): Promise<PartnerFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PartnerAttributes>[]>>('partners', {
+    populate: ['logo'],
+    sort: ['displayOrder:asc', 'name:asc'],
+    filters: { isActive: { $eq: true } },
+    ...options,
+  });
+  return response.data.map(flattenPartner);
+}
+
+export async function getInternationalPartners(): Promise<PartnerFlat[]> {
+  return getPartners({
+    filters: {
+      partnerType: { $eq: 'International University' },
+      isActive: { $eq: true },
+    },
+  });
+}
+
+// ============================================
+// Flatten Functions - See correct versions below
+
+export async function getAlumni(options: FetchOptions = {}): Promise<AlumnusFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<AlumnusAttributes>[]>>('alumni', {
+    populate: ['photo'],
+    sort: ['defenseYear:desc', 'fullName:asc'],
+    ...options,
+  });
+  return response.data.map(flattenAlumnus);
+}
+
+export async function getHomepageAlumni(limit: number = 4): Promise<AlumnusFlat[]> {
+  return getAlumni({
+    pagination: { pageSize: limit },
+    sort: ['defenseYear:desc'],
+  });
+}
+
+// ============================================
+// API Functions - Collaborators
+// ============================================
+
+export async function getCollaborators(
+  options: FetchOptions = {}
+): Promise<StrapiData<CollaboratorAttributes>[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<CollaboratorAttributes>[]>>(
+    'collaborators',
+    {
+      populate: ['photo'],
+      sort: ['fullName:asc'],
+      filters: { isActive: { $eq: true } },
+      ...options,
+    }
+  );
+  return response.data;
+}
+
+// ============================================
+// API Functions - Tags
+// ============================================
+
+export async function getTags(): Promise<StrapiData<TagAttributes>[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<TagAttributes>[]>>('tags', {
+    sort: ['name:asc'],
+  });
+  return response.data;
+}
+
+// ============================================
+// API Functions - Dashboard Metrics
+// ============================================
+
+export async function getDashboardMetrics(): Promise<StrapiData<DashboardMetricAttributes>[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<DashboardMetricAttributes>[]>>(
+    'dashboard-metrics',
+    {
+      sort: ['displayOrder:asc'],
+      filters: { isActive: { $eq: true } },
+    }
+  );
+  return response.data;
+}
+
+// ============================================
+// API Functions - Homepage Settings (Single Type)
+// ============================================
+
+export async function getHomepageSettings(): Promise<HomepageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{
+      data: { id: number; attributes: HomepageSettingAttributes };
+    }>('homepage-setting', {
+      populate: '*',
+    });
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching homepage settings:', error);
+    return null;
+  }
+}

@@ -24,6 +24,16 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getHomepageSettings();
   const seo = settings?.defaultSeo;
 
+  // Preparar URL da imagem OG
+  const ogImageUrl = seo?.ogImage?.data?.attributes?.url
+    ? getStrapiMediaUrl(seo.ogImage.data.attributes.url)
+    : undefined;
+
+  // Preparar URL da imagem Twitter
+  const twitterImageUrl = seo?.twitterImage?.data?.attributes?.url
+    ? getStrapiMediaUrl(seo.twitterImage.data.attributes.url)
+    : ogImageUrl; // Fallback para ogImage se twitterImage não existir
+
   return {
     title:
       seo?.metaTitle || 'e-Controls Research Group - UFAM | Excelência em Controle de Sistemas',
@@ -41,14 +51,24 @@ export async function generateMetadata(): Promise<Metadata> {
       'Manaus',
       'Amazonas',
     ],
+    robots: seo?.metaRobots || 'index, follow',
+    alternates: seo?.canonicalURL
+      ? {
+          canonical: seo.canonicalURL,
+        }
+      : undefined,
     openGraph: {
       title: seo?.ogTitle || seo?.metaTitle || 'e-Controls Research Group - UFAM',
       description: seo?.ogDescription || seo?.metaDescription || '',
+      images: ogImageUrl ? [{ url: ogImageUrl }] : [],
+      type: 'website',
+      locale: 'pt_BR',
     },
     twitter: {
       card: (seo?.twitterCard as 'summary_large_image' | 'summary') || 'summary_large_image',
       title: seo?.twitterTitle || seo?.metaTitle || '',
       description: seo?.twitterDescription || seo?.metaDescription || '',
+      images: twitterImageUrl ? [twitterImageUrl] : [],
     },
   };
 }

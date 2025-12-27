@@ -11,7 +11,8 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
-  const gradient = getFundingAgencyGradient(project.fundingAgency);
+  const firstAgency = project.fundingAgencies?.[0]?.name || '';
+  const gradient = getFundingAgencyGradient(firstAgency);
   const statusColors = getProjectStatusColors(project.status);
 
   return (
@@ -40,12 +41,13 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
         )}
 
         {/* Funding Agency Badge */}
-        {project.fundingAgency && (
+        {project.fundingAgencies && project.fundingAgencies.length > 0 && (
           <div
             className="absolute top-4 right-4 bg-black/60 backdrop-blur text-xs font-tech 
                           text-white px-2 py-1 rounded border border-white/10"
           >
-            {project.fundingAgency}
+            {project.fundingAgencies[0].name}
+            {project.fundingAgencies.length > 1 && ` +${project.fundingAgencies.length - 1}`}
           </div>
         )}
 

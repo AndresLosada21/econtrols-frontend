@@ -1,21 +1,79 @@
-import { getProjects } from '@/lib/strapi';
+import { Metadata } from 'next';
+import Image from 'next/image';
+import {
+  getProjects,
+  getProjectsPageSettings,
+  getStrapiMediaUrl,
+  getHomepageSettings,
+} from '@/lib/strapi';
 import type { ProjectFlat } from '@/types/strapi';
 import ProjectCard from '@/components/cards/ProjectCard';
 import { FadeIn } from '@/components/effects/FadeIn';
 
-export const metadata = {
-  title: 'Projetos | e-Controls',
-  description: 'Projetos de pesquisa e desenvolvimento do grupo e-Controls da UFAM.',
-};
+// ============================================
+// Dynamic SEO Metadata
+// ============================================
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getProjectsPageSettings();
+  const homepageSettings = await getHomepageSettings();
+  const seo = settings?.seo;
+
+  const title = seo?.metaTitle || 'Projetos | e-Controls';
+  const description =
+    seo?.metaDescription || 'Projetos de pesquisa e desenvolvimento do grupo e-Controls da UFAM.';
+
+  return {
+    title,
+    description,
+    keywords: seo?.keywords,
+    robots: seo?.metaRobots,
+    alternates: {
+      canonical: seo?.canonicalURL,
+    },
+    openGraph: {
+      title: seo?.ogTitle || title,
+      description: seo?.ogDescription || description,
+      url: seo?.ogUrl,
+      type: (seo?.ogType as 'website') || 'website',
+      locale: seo?.ogLocale || 'pt_BR',
+      images: seo?.ogImage?.data?.attributes?.url
+        ? [{ url: getStrapiMediaUrl(seo.ogImage.data.attributes.url) || '' }]
+        : homepageSettings?.defaultSeo?.ogImage?.data?.attributes?.url
+          ? [
+              {
+                url:
+                  getStrapiMediaUrl(homepageSettings.defaultSeo.ogImage.data.attributes.url) || '',
+              },
+            ]
+          : [],
+    },
+    twitter: {
+      card: seo?.twitterCard || 'summary_large_image',
+      title: seo?.twitterTitle || seo?.ogTitle || title,
+      description: seo?.twitterDescription || seo?.ogDescription || description,
+      images: seo?.twitterImage?.data?.attributes?.url
+        ? [getStrapiMediaUrl(seo.twitterImage.data.attributes.url) || '']
+        : seo?.ogImage?.data?.attributes?.url
+          ? [getStrapiMediaUrl(seo.ogImage.data.attributes.url) || '']
+          : [],
+    },
+  };
+}
 
 export default async function ProjectsPage() {
   let projects: ProjectFlat[] = [];
+  let pageSettings = null;
 
   try {
-    projects = await getProjects();
+    [projects, pageSettings] = await Promise.all([getProjects(), getProjectsPageSettings()]);
   } catch (error) {
-    console.error('Error fetching projects:', error);
+    console.error('Error fetching projects page data:', error);
   }
+
+  // Extract unique funding agencies from all projects
+  const allAgencies = projects.flatMap((p) => p.fundingAgencies || []);
+  const uniqueAgencies = Array.from(new Map(allAgencies.map((a) => [a.id, a])).values());
 
   // Group by status
   const activeProjects = projects.filter(
@@ -28,8 +86,33 @@ export default async function ProjectsPage() {
     (p) => p.status === 'Planejado' || p.status === 'planned'
   );
 
-  // Stats
-  const agencies = [...new Set(projects.map((p) => p.fundingAgency).filter(Boolean))];
+  // Get dynamic content with fallbacks
+  const pageTitle = pageSettings?.pageTitle || 'Projetos';
+  const pageDescription =
+    pageSettings?.pageDescription ||
+    'Projetos de pesquisa financiados por agências nacionais e internacionais, desenvolvendo soluções inovadoras em controle de sistemas.';
+
+  const activeSection = pageSettings?.activeSection || {
+    label: '/// em andamento',
+    title: 'Projetos Ativos',
+    description: '',
+  };
+
+  const plannedSection = pageSettings?.plannedSection || {
+    label: '/// planejados',
+    title: 'Próximos Projetos',
+    description: '',
+  };
+
+  const finishedSection = pageSettings?.finishedSection || {
+    label: '/// concluídos',
+    title: 'Projetos Concluídos',
+    description: '',
+  };
+
+  const agenciesTitle = pageSettings?.agenciesTitle || 'Agências de Fomento';
+  const emptyStateMessage =
+    pageSettings?.emptyStateMessage || 'Conecte ao Strapi para ver os projetos.';
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -37,11 +120,10 @@ export default async function ProjectsPage() {
       <section className="py-16 border-b border-white/5">
         <div className="container mx-auto px-6">
           <FadeIn>
-            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">Projetos</h1>
-            <p className="text-ufam-secondary max-w-2xl">
-              Projetos de pesquisa financiados por agências nacionais e internacionais,
-              desenvolvendo soluções inovadoras em controle de sistemas.
-            </p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">
+              {pageTitle}
+            </h1>
+            <p className="text-ufam-secondary max-w-2xl">{pageDescription}</p>
           </FadeIn>
         </div>
       </section>
@@ -71,7 +153,7 @@ export default async function ProjectsPage() {
               </FadeIn>
               <FadeIn delay={300} className="text-center">
                 <span className="text-3xl font-bold text-ufam-light font-tech">
-                  {agencies.length}
+                  {uniqueAgencies.length}
                 </span>
                 <p className="text-xs text-ufam-secondary font-tech lowercase">agências</p>
               </FadeIn>
@@ -86,11 +168,14 @@ export default async function ProjectsPage() {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// em andamento'}
+                {activeSection.label}
               </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                Projetos Ativos
+              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-2">
+                {activeSection.title}
               </h3>
+              {activeSection.description && (
+                <p className="text-ufam-secondary mb-8">{activeSection.description}</p>
+              )}
             </FadeIn>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,11 +195,14 @@ export default async function ProjectsPage() {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// planejados'}
+                {plannedSection.label}
               </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                Próximos Projetos
+              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-2">
+                {plannedSection.title}
               </h3>
+              {plannedSection.description && (
+                <p className="text-ufam-secondary mb-8">{plannedSection.description}</p>
+              )}
             </FadeIn>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -134,11 +222,14 @@ export default async function ProjectsPage() {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// concluídos'}
+                {finishedSection.label}
               </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                Projetos Concluídos
+              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-2">
+                {finishedSection.title}
               </h3>
+              {finishedSection.description && (
+                <p className="text-ufam-secondary mb-8">{finishedSection.description}</p>
+              )}
             </FadeIn>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -153,17 +244,31 @@ export default async function ProjectsPage() {
       )}
 
       {/* Funding Agencies */}
-      {agencies.length > 0 && (
+      {uniqueAgencies.length > 0 && (
         <section className="py-16 bg-ufam-dark border-t border-white/5">
           <div className="container mx-auto px-6 text-center">
             <FadeIn>
-              <h3 className="text-lg font-bold text-white font-tech mb-6">Agências de Fomento</h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                {agencies.map((agency, index) => (
-                  <FadeIn key={agency} delay={index * 50}>
-                    <span className="px-4 py-2 bg-white/5 border border-white/10 rounded text-sm font-tech text-ufam-secondary">
-                      {agency}
-                    </span>
+              <h3 className="text-lg font-bold text-white font-tech mb-6">{agenciesTitle}</h3>
+              <div className="flex flex-wrap justify-center items-center gap-6">
+                {uniqueAgencies.map((agency, index) => (
+                  <FadeIn key={agency.id} delay={index * 50}>
+                    {agency.logoUrl ? (
+                      <div
+                        className="relative w-32 h-16 grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100"
+                        title={agency.name}
+                      >
+                        <Image
+                          src={agency.logoUrl}
+                          alt={agency.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <span className="px-4 py-2 bg-white/5 border border-white/10 rounded text-sm font-tech text-ufam-secondary">
+                        {agency.name}
+                      </span>
+                    )}
                   </FadeIn>
                 ))}
               </div>
@@ -174,9 +279,9 @@ export default async function ProjectsPage() {
 
       {/* Empty State */}
       {projects.length === 0 && (
-        <section className="py-24">
+        <section className="py-32">
           <div className="container mx-auto px-6 text-center">
-            <p className="text-ufam-secondary">Conecte ao Strapi para ver os projetos.</p>
+            <p className="text-ufam-secondary">{emptyStateMessage}</p>
           </div>
         </section>
       )}

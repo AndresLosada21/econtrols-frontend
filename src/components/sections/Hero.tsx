@@ -3,8 +3,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
-export default function Hero() {
+interface HeroProps {
+  groupName?: string;
+  tagline?: string;
+  institutionalAffiliation?: string;
+  backgroundImageUrl?: string;
+}
+
+export default function Hero({
+  groupName = 'e-Controls',
+  tagline = 'Excelência em Controle de Sistemas na Amazônia',
+  institutionalAffiliation = 'Universidade Federal do Amazonas',
+  backgroundImageUrl,
+}: HeroProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -15,6 +28,19 @@ export default function Hero() {
 
   return (
     <header className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      {/* Background image (optional) */}
+      {backgroundImageUrl && (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={backgroundImageUrl}
+            alt="Hero background"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+      )}
+
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-ufam-bg z-0" />
 
@@ -28,13 +54,13 @@ export default function Hero() {
             }`}
             style={{ transitionDelay: '100ms' }}
           >
-            :: universidade federal do amazonas ::
+            :: {institutionalAffiliation.toLowerCase()} ::
           </p>
         </div>
 
         {/* Main title */}
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white mb-8 leading-none font-tech uppercase">
-          {/* e-Controls */}
+          {/* Group Name */}
           <div className="overflow-hidden">
             <span
               className={`block text-ufam-primary transition-transform duration-700 ${
@@ -42,7 +68,7 @@ export default function Hero() {
               }`}
               style={{ transitionDelay: '200ms' }}
             >
-              e-Controls
+              {groupName}
             </span>
           </div>
           {/* Research Group with gradient */}
@@ -65,7 +91,7 @@ export default function Hero() {
           }`}
           style={{ transitionDelay: '500ms' }}
         >
-          Excelência em Controle de Sistemas na Amazônia
+          {tagline}
         </p>
 
         {/* CTA Buttons */}

@@ -14,7 +14,7 @@ export default function FacultyCard({ member, index = 0 }: FacultyCardProps) {
 
   return (
     <Link
-      href={`/people/${member.id}`}
+      href={`/people/${member.slug || member.id}`}
       className="group text-center block"
       style={{ animationDelay: `${index * 100}ms` }}
     >
