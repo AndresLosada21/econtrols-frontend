@@ -78,8 +78,46 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch navigation settings from Strapi
   const navbarSettings = await getNavbarSettings();
   const footerSettings = await getFooterSettings();
+
+  // Transform mainMenu to the format expected by Header component
+  // Handles null/undefined cases gracefully
+  const headerLinks =
+    navbarSettings?.mainMenu?.map((item) => ({
+      label: item.label,
+      url: item.url,
+      isExternal: item.isExternal ?? false,
+    })) || [];
+
+  // Transform ctaButton for Header
+  const headerCtaButton = navbarSettings?.ctaButton
+    ? {
+        label: navbarSettings.ctaButton.label,
+        url: navbarSettings.ctaButton.url,
+        isExternal: navbarSettings.ctaButton.isExternal ?? false,
+        isVisible: navbarSettings.ctaButton.isVisible ?? true,
+      }
+    : undefined;
+
+  // Transform menuColumns to the format expected by Footer component
+  // Deep populate: menuColumns -> links
+  const footerMenuColumns =
+    footerSettings?.menuColumns?.map((column) => ({
+      title: column.title,
+      links:
+        column.links?.map((link) => ({
+          label: link.label,
+          url: link.url,
+          isExternal: link.isExternal ?? false,
+        })) || [],
+    })) || [];
+
+  // Build address string from contactInfo
+  const footerAddress = footerSettings?.contactInfo
+    ? `${footerSettings.contactInfo.address || ''}\n${footerSettings.contactInfo.city || ''}, ${footerSettings.contactInfo.state || ''}\nCEP: ${footerSettings.contactInfo.postalCode || ''}`
+    : undefined;
 
   return (
     <html lang="pt-br" className={`scroll-smooth ${inter.variable} ${orbitron.variable}`}>
@@ -94,6 +132,8 @@ export default async function RootLayout({
               : undefined
           }
           logoAlt={navbarSettings?.logoAlt}
+          links={headerLinks}
+          ctaButton={headerCtaButton}
         />
         <main>{children}</main>
         <Footer
@@ -109,9 +149,10 @@ export default async function RootLayout({
           department={footerSettings?.departmentName}
           contactEmail={footerSettings?.contactInfo?.email}
           contactPhone={footerSettings?.contactInfo?.phone}
-          address={`${footerSettings?.contactInfo?.address}\n${footerSettings?.contactInfo?.city}, ${footerSettings?.contactInfo?.state}\nCEP: ${footerSettings?.contactInfo?.postalCode}`}
+          address={footerAddress}
           copyrightText={footerSettings?.copyrightText}
           bottomText={footerSettings?.bottomText}
+          menuColumns={footerMenuColumns}
         />
       </body>
     </html>

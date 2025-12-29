@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import type { FacultyMemberFlat } from '@/types/strapi';
-import { getRoleColors } from '@/styles/utils';
 
 interface FacultyCardProps {
   member: FacultyMemberFlat;
@@ -10,8 +9,6 @@ interface FacultyCardProps {
 }
 
 export default function FacultyCard({ member, index = 0 }: FacultyCardProps) {
-  const roleColors = getRoleColors(member.role);
-
   return (
     <Link
       href={`/people/${member.slug || member.id}`}
@@ -37,12 +34,12 @@ export default function FacultyCard({ member, index = 0 }: FacultyCardProps) {
           </div>
         )}
 
-        {/* Role Badge */}
+        {/* Role Badge - usando cores dinâmicas do memberRole */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4">
           <span
-            className={`text-white font-tech text-xs px-2 py-1 rounded backdrop-blur border lowercase ${roleColors.bg} ${roleColors.border}`}
+            className={`font-tech text-xs px-2 py-1 rounded backdrop-blur border lowercase ${member.memberRole.color}`}
           >
-            {member.role}
+            {member.memberRole.name}
           </span>
         </div>
 

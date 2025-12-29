@@ -5,28 +5,48 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 
-const navLinks = [
-  { href: '/research', label: '/pesquisa' },
-  { href: '/people', label: '/equipe' },
-  { href: '/projects', label: '/projetos' },
-  { href: '/partners', label: '/parceiros' },
-  { href: '/publications', label: '/publicações' },
-  { href: '/news', label: '/notícias' },
-];
+// Interface para links de navegação dinâmicos
+interface NavLink {
+  label: string;
+  url: string;
+  isExternal: boolean;
+}
 
 interface HeaderProps {
   groupName?: string;
   logoUrl?: string;
   logoAlt?: string;
+  links?: NavLink[];
+  ctaButton?: {
+    label: string;
+    url: string;
+    isExternal: boolean;
+    isVisible: boolean;
+  };
 }
+
+// Links padrão (fallback caso não venha do Strapi)
+const defaultNavLinks: NavLink[] = [
+  { url: '/research', label: '/pesquisa', isExternal: false },
+  { url: '/people', label: '/equipe', isExternal: false },
+  { url: '/projects', label: '/projetos', isExternal: false },
+  { url: '/partners', label: '/parceiros', isExternal: false },
+  { url: '/publications', label: '/publicações', isExternal: false },
+  { url: '/news', label: '/notícias', isExternal: false },
+];
 
 export default function Header({
   groupName = 'e-Controls',
   logoUrl,
   logoAlt = 'Logo',
+  links = defaultNavLinks,
+  ctaButton = { label: 'contato', url: '#contact', isExternal: false, isVisible: true },
 }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Usa os links passados via props, ou fallback para os padrões
+  const navLinks = links.length > 0 ? links : defaultNavLinks;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,24 +91,48 @@ export default function Header({
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex gap-6 font-tech text-xs text-ufam-secondary tracking-widest">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="hover:text-ufam-primary transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link, index) =>
+            link.isExternal ? (
+              <a
+                key={`${link.url}-${index}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-ufam-primary transition-colors"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={`${link.url}-${index}`}
+                href={link.url}
+                className="hover:text-ufam-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
 
         {/* Contact Button */}
-        <Link
-          href="#contact"
-          className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all lowercase"
-        >
-          contato
-        </Link>
+        {ctaButton.isVisible &&
+          (ctaButton.isExternal ? (
+            <a
+              href={ctaButton.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all lowercase"
+            >
+              {ctaButton.label}
+            </a>
+          ) : (
+            <Link
+              href={ctaButton.url}
+              className="hidden sm:block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all lowercase"
+            >
+              {ctaButton.label}
+            </Link>
+          ))}
 
         {/* Mobile Menu Button */}
         <button
@@ -104,23 +148,49 @@ export default function Header({
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-ufam-bg/95 backdrop-blur-lg border-t border-white/5">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="#contact"
-              className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              contato
-            </Link>
+            {navLinks.map((link, index) =>
+              link.isExternal ? (
+                <a
+                  key={`mobile-${link.url}-${index}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={`mobile-${link.url}-${index}`}
+                  href={link.url}
+                  className="font-tech text-sm text-ufam-secondary hover:text-ufam-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
+            {ctaButton.isVisible &&
+              (ctaButton.isExternal ? (
+                <a
+                  href={ctaButton.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {ctaButton.label}
+                </a>
+              ) : (
+                <Link
+                  href={ctaButton.url}
+                  className="inline-block px-6 py-2 border border-ufam-primary/50 rounded text-ufam-primary font-tech text-xs hover:bg-ufam-primary hover:text-white transition-all text-center lowercase"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {ctaButton.label}
+                </Link>
+              ))}
           </div>
         </div>
       )}

@@ -1,11 +1,12 @@
 import { Metadata } from 'next';
 import {
   getFacultyMembers,
+  getMemberRoles,
   getPeoplePageSettings,
   getHomepageSettings,
   getStrapiMediaUrl,
 } from '@/lib/strapi';
-import type { FacultyMemberFlat } from '@/types/strapi';
+import type { FacultyMemberFlat, MemberRoleFlat } from '@/types/strapi';
 import FacultyCard from '@/components/cards/FacultyCard';
 import { FadeIn } from '@/components/effects/FadeIn';
 import Link from 'next/link';
@@ -62,25 +63,78 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// ============================================
+// Helper: Group members by role with section info
+// ============================================
+
+interface RoleSection {
+  role: MemberRoleFlat;
+  members: FacultyMemberFlat[];
+  sectionTitle: string;
+  sectionDescription?: string;
+  label: string;
+}
+
+function groupMembersByRole(members: FacultyMemberFlat[], roles: MemberRoleFlat[]): RoleSection[] {
+  // Sort roles by displayOrder
+  const sortedRoles = [...roles].sort((a, b) => a.displayOrder - b.displayOrder);
+
+  // Group members by role, combining roles with same sectionTitle
+  const sectionMap = new Map<string, RoleSection>();
+
+  for (const role of sortedRoles) {
+    if (role.showInListing === false) continue;
+
+    const sectionKey = role.sectionTitle || role.name;
+    const roleMembers = members.filter((m) => m.memberRole.id === role.id);
+
+    if (roleMembers.length === 0) continue;
+
+    if (sectionMap.has(sectionKey)) {
+      // Add members to existing section
+      const existingSection = sectionMap.get(sectionKey)!;
+      existingSection.members.push(...roleMembers);
+    } else {
+      // Create new section
+      sectionMap.set(sectionKey, {
+        role,
+        members: roleMembers,
+        sectionTitle: role.sectionTitle || role.name,
+        sectionDescription: role.sectionDescription,
+        label: `/// ${(role.sectionTitle || role.name).toLowerCase()}`,
+      });
+    }
+  }
+
+  // Convert to array and sort members within each section
+  return Array.from(sectionMap.values()).map((section) => ({
+    ...section,
+    members: section.members.sort((a, b) => {
+      // Sort by displayOrder first, then by name
+      const orderDiff = (a.displayOrder || 0) - (b.displayOrder || 0);
+      if (orderDiff !== 0) return orderDiff;
+      return a.fullName.localeCompare(b.fullName);
+    }),
+  }));
+}
+
 export default async function PeoplePage() {
   let facultyMembers: FacultyMemberFlat[] = [];
+  let memberRoles: MemberRoleFlat[] = [];
   let pageSettings = null;
 
   try {
-    [facultyMembers, pageSettings] = await Promise.all([
+    [facultyMembers, memberRoles, pageSettings] = await Promise.all([
       getFacultyMembers({ filters: { isActive: { $eq: true } } }),
+      getMemberRoles(),
       getPeoplePageSettings(),
     ]);
   } catch (error) {
     console.error('Error fetching people page data:', error);
   }
 
-  // Group by role
-  const leaders = facultyMembers.filter((m) => m.role === 'Líder' || m.role === 'Co-líder');
-  const researchers = facultyMembers.filter(
-    (m) => m.role === 'Pesquisador Permanente' || m.role === 'Pesquisador Colaborador'
-  );
-  const postdocs = facultyMembers.filter((m) => m.role === 'Pós-Doc');
+  // Group members by role dynamically
+  const roleSections = groupMembersByRole(facultyMembers, memberRoles);
 
   // Get dynamic content with fallbacks
   const pageTitle = pageSettings?.pageTitle || 'Nossa Equipe';
@@ -88,22 +142,12 @@ export default async function PeoplePage() {
     pageSettings?.pageDescription ||
     'Conheça os pesquisadores, professores e colaboradores que integram o grupo e-Controls.';
 
-  const leadersSection = pageSettings?.leadersSection || {
-    label: '/// liderança',
-    title: 'Líderes do Grupo',
-    description: '',
-  };
-
-  const researchersSection = pageSettings?.researchersSection || {
-    label: '/// pesquisadores',
-    title: 'Pesquisadores Permanentes',
-    description: '',
-  };
-
-  const postdocsSection = pageSettings?.postdocsSection || {
-    label: '/// pós-doutorandos',
-    title: 'Pós-Doutorandos',
-    description: '',
+  // Track section index for alternating backgrounds
+  let sectionIndex = 0;
+  const getSectionBg = () => {
+    const bg = sectionIndex % 2 === 0 ? '' : 'bg-ufam-dark';
+    sectionIndex++;
+    return bg;
   };
 
   return (
@@ -120,24 +164,24 @@ export default async function PeoplePage() {
         </div>
       </section>
 
-      {/* Leaders Section */}
-      {leaders.length > 0 && (
-        <section className="py-16">
+      {/* Dynamic Role Sections */}
+      {roleSections.map((section) => (
+        <section key={section.sectionTitle} className={`py-16 ${getSectionBg()}`}>
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {leadersSection.label}
+                {section.label}
               </h2>
               <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                {leadersSection.title}
+                {section.sectionTitle}
               </h3>
-              {leadersSection.description && (
-                <p className="text-ufam-secondary mb-8">{leadersSection.description}</p>
+              {section.sectionDescription && (
+                <p className="text-ufam-secondary mb-8">{section.sectionDescription}</p>
               )}
             </FadeIn>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {leaders.map((member, index) => (
+              {section.members.map((member, index) => (
                 <FadeIn key={member.id} delay={index * 100}>
                   <FacultyCard member={member} index={index} />
                 </FadeIn>
@@ -145,64 +189,10 @@ export default async function PeoplePage() {
             </div>
           </div>
         </section>
-      )}
-
-      {/* Researchers Section */}
-      {researchers.length > 0 && (
-        <section className="py-16 bg-ufam-dark">
-          <div className="container mx-auto px-6">
-            <FadeIn>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {researchersSection.label}
-              </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                {researchersSection.title}
-              </h3>
-              {researchersSection.description && (
-                <p className="text-ufam-secondary mb-8">{researchersSection.description}</p>
-              )}
-            </FadeIn>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {researchers.map((member, index) => (
-                <FadeIn key={member.id} delay={index * 100}>
-                  <FacultyCard member={member} index={index} />
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Post-docs Section */}
-      {postdocs.length > 0 && (
-        <section className="py-16">
-          <div className="container mx-auto px-6">
-            <FadeIn>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {postdocsSection.label}
-              </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                {postdocsSection.title}
-              </h3>
-              {postdocsSection.description && (
-                <p className="text-ufam-secondary mb-8">{postdocsSection.description}</p>
-              )}
-            </FadeIn>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {postdocs.map((member, index) => (
-                <FadeIn key={member.id} delay={index * 100}>
-                  <FacultyCard member={member} index={index} />
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      ))}
 
       {/* Alumni Link */}
-      <section className="py-16 bg-ufam-dark border-t border-white/5">
+      <section className={`py-16 border-t border-white/5 ${getSectionBg()}`}>
         <div className="container mx-auto px-6 text-center">
           <FadeIn>
             <h3 className="text-2xl font-bold text-white font-tech mb-4">Egressos</h3>

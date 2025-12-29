@@ -1,22 +1,66 @@
-import { getNewsItems } from '@/lib/strapi';
+import { getNewsItems, getNewsPageSettings, getStrapiMediaUrl } from '@/lib/strapi';
 import type { NewsItemFlat } from '@/types/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
+import { Metadata } from 'next';
 
-export const metadata = {
-  title: 'Notícias | e-Controls',
-  description: 'Últimas notícias e atualizações do grupo e-Controls da UFAM.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const pageSettings = await getNewsPageSettings();
+
+  const seo = pageSettings?.seo;
+  const title = seo?.metaTitle || pageSettings?.pageTitle || 'Notícias | e-Controls';
+  const description =
+    seo?.metaDescription ||
+    pageSettings?.pageDescription ||
+    'Últimas notícias e atualizações do grupo e-Controls da UFAM.';
+
+  return {
+    title,
+    description,
+    keywords: seo?.keywords,
+    robots: seo?.metaRobots,
+    alternates: {
+      canonical: seo?.canonicalURL,
+    },
+    openGraph: {
+      title: seo?.ogTitle || title,
+      description: seo?.ogDescription || description,
+      url: seo?.ogUrl,
+      type: (seo?.ogType as 'website') || 'website',
+      locale: seo?.ogLocale || 'pt_BR',
+      images: seo?.ogImage?.data?.attributes?.url
+        ? [{ url: getStrapiMediaUrl(seo.ogImage.data.attributes.url) || '' }]
+        : [],
+    },
+    twitter: {
+      card: seo?.twitterCard || 'summary_large_image',
+      title: seo?.twitterTitle || seo?.ogTitle || title,
+      description: seo?.twitterDescription || seo?.ogDescription || description,
+      images: seo?.twitterImage?.data?.attributes?.url
+        ? [getStrapiMediaUrl(seo.twitterImage.data.attributes.url) || '']
+        : seo?.ogImage?.data?.attributes?.url
+          ? [getStrapiMediaUrl(seo.ogImage.data.attributes.url) || '']
+          : [],
+    },
+  };
+}
 
 export default async function NewsPage() {
-  let news: NewsItemFlat[] = [];
+  const [news, pageSettings] = await Promise.all([getNewsItems(), getNewsPageSettings()]);
 
-  try {
-    news = await getNewsItems();
-  } catch (error) {
-    console.error('Error fetching news:', error);
-  }
+  // Labels com fallback
+  const labels = {
+    pageTitle: pageSettings?.pageTitle || 'Notícias',
+    pageDescription:
+      pageSettings?.pageDescription ||
+      'Acompanhe as últimas novidades, eventos e conquistas do grupo e-Controls.',
+    emptyStateMessage: pageSettings?.emptyStateMessage || 'Nenhuma notícia encontrada',
+    featuredLabel: pageSettings?.featuredLabel || '/// destaques',
+    allNewsLabel: pageSettings?.allNewsLabel || '/// todas as notícias',
+    categoriesLabel: pageSettings?.categoriesLabel || 'Categorias',
+    readMoreLabel: pageSettings?.readMoreLabel || 'ler mais',
+  };
 
   // Get unique categories
   const categories = [...new Set(news.map((n) => n.category).filter(Boolean))];
@@ -31,10 +75,10 @@ export default async function NewsPage() {
       <section className="py-16 border-b border-white/5">
         <div className="container mx-auto px-6">
           <FadeIn>
-            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">Notícias</h1>
-            <p className="text-ufam-secondary max-w-2xl">
-              Acompanhe as últimas novidades, eventos e conquistas do grupo e-Controls.
-            </p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">
+              {labels.pageTitle}
+            </h1>
+            <p className="text-ufam-secondary max-w-2xl">{labels.pageDescription}</p>
           </FadeIn>
         </div>
       </section>
@@ -66,7 +110,7 @@ export default async function NewsPage() {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-6 tracking-widest lowercase">
-                {'/// destaques'}
+                {labels.featuredLabel}
               </h2>
             </FadeIn>
 
@@ -105,7 +149,7 @@ export default async function NewsPage() {
                         <p className="text-ufam-secondary text-sm line-clamp-2">{item.excerpt}</p>
                       )}
                       <span className="inline-flex items-center gap-1 text-ufam-primary text-sm font-tech mt-4 group-hover:gap-2 transition-all lowercase">
-                        ler mais <ArrowRight className="w-4 h-4" />
+                        {labels.readMoreLabel} <ArrowRight className="w-4 h-4" />
                       </span>
                     </div>
                   </Link>
@@ -122,7 +166,7 @@ export default async function NewsPage() {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-6 tracking-widest lowercase">
-                {'/// todas as notícias'}
+                {labels.allNewsLabel}
               </h2>
             </FadeIn>
 

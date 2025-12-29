@@ -3,17 +3,73 @@
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 import type { ProjectFlat } from '@/types/strapi';
-import { getFundingAgencyGradient, getProjectStatusColors } from '@/styles/utils';
+import { getFundingAgencyGradient } from '@/styles/utils';
 
 interface ProjectCardProps {
   project: ProjectFlat;
   index?: number;
 }
 
+/**
+ * Extrai as classes de cor do campo color do projectStatus
+ *
+ * O campo color do banco vem no formato:
+ * "bg-green-500/20 text-green-400 border-green-500/30"
+ *
+ * Esta função separa em: { bg, text, border }
+ */
+function parseStatusColor(colorString: string): {
+  bg: string;
+  text: string;
+  border: string;
+} {
+  const classes = colorString.split(' ');
+
+  const bg = classes.find((c) => c.startsWith('bg-')) || 'bg-gray-500/20';
+  const text = classes.find((c) => c.startsWith('text-')) || 'text-gray-400';
+  const border = classes.find((c) => c.startsWith('border-')) || 'border-gray-500/30';
+
+  return { bg, text, border };
+}
+
+/**
+ * Obtém as cores do status do projeto
+ *
+ * TAXONOMIA DINÂMICA: Usa projectStatus.color do banco de dados.
+ */
+function getStatusColorClasses(project: ProjectFlat): {
+  bg: string;
+  text: string;
+  border: string;
+  label: string;
+} {
+  const { bg, text, border } = parseStatusColor(project.projectStatus.color);
+  return {
+    bg,
+    text,
+    border,
+    label: project.projectStatus.name.toLowerCase(),
+  };
+}
+
+/**
+ * Obtém a agência de fomento do projeto
+ */
+function getFundingAgency(project: ProjectFlat): { name: string; count: number } | null {
+  if (project.fundingAgencyPartners && project.fundingAgencyPartners.length > 0) {
+    return {
+      name: project.fundingAgencyPartners[0].name,
+      count: project.fundingAgencyPartners.length,
+    };
+  }
+
+  return null;
+}
+
 export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
-  const firstAgency = project.fundingAgencies?.[0]?.name || '';
-  const gradient = getFundingAgencyGradient(firstAgency);
-  const statusColors = getProjectStatusColors(project.status);
+  const fundingAgency = getFundingAgency(project);
+  const gradient = getFundingAgencyGradient(fundingAgency?.name || '');
+  const statusColors = getStatusColorClasses(project);
 
   return (
     <Link
@@ -41,17 +97,17 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
         )}
 
         {/* Funding Agency Badge */}
-        {project.fundingAgencies && project.fundingAgencies.length > 0 && (
+        {fundingAgency && (
           <div
             className="absolute top-4 right-4 bg-black/60 backdrop-blur text-xs font-tech 
                           text-white px-2 py-1 rounded border border-white/10"
           >
-            {project.fundingAgencies[0].name}
-            {project.fundingAgencies.length > 1 && ` +${project.fundingAgencies.length - 1}`}
+            {fundingAgency.name}
+            {fundingAgency.count > 1 && ` +${fundingAgency.count - 1}`}
           </div>
         )}
 
-        {/* Status Badge */}
+        {/* Status Badge - Usando cores dinâmicas */}
         <div
           className={`absolute top-4 left-4 text-xs font-tech px-2 py-1 rounded border ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
         >

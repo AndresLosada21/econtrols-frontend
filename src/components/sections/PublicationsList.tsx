@@ -10,48 +10,39 @@ interface PublicationsListProps {
   publications: PublicationFlat[];
 }
 
-type PublicationType =
-  | 'Todos'
-  | 'Journal Article'
-  | 'Conference Paper'
-  | 'Book Chapter'
-  | 'Thesis'
-  | 'Technical Report';
-
-const typeLabels: Record<PublicationType, string> = {
-  Todos: 'Todas',
-  'Journal Article': 'Journals',
-  'Conference Paper': 'Conferências',
-  'Book Chapter': 'Capítulos',
-  Thesis: 'Teses',
-  'Technical Report': 'Relatórios',
-};
-
-function getTypeColor(type: string): string {
+function getTypeColor(type: string | undefined): string {
   switch (type) {
     case 'Journal Article':
       return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
     case 'Conference Paper':
       return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     case 'Book Chapter':
+    case 'Book':
       return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    case 'Thesis - PhD':
+    case 'Thesis - Masters':
     case 'Thesis':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
+      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
     case 'Technical Report':
       return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    case 'Software/Tool':
+      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
     default:
-      return 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
+      return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
   }
 }
 
-function getTypeIcon(type: string) {
+function getTypeIcon(type: string | undefined) {
   switch (type) {
     case 'Journal Article':
       return <BookOpen className="w-3 h-3" />;
     case 'Conference Paper':
       return <Users className="w-3 h-3" />;
     case 'Book Chapter':
+    case 'Book':
       return <FileText className="w-3 h-3" />;
+    case 'Thesis - PhD':
+    case 'Thesis - Masters':
     case 'Thesis':
       return <Award className="w-3 h-3" />;
     default:
@@ -61,7 +52,7 @@ function getTypeIcon(type: string) {
 
 export function PublicationsList({ publications }: PublicationsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<PublicationType>('Todos');
+  const [selectedType, setSelectedType] = useState<string>('Todos');
   const [selectedYear, setSelectedYear] = useState<string>('Todos');
   const [selectedQualis, setSelectedQualis] = useState<string>('Todos');
   const [showFilters, setShowFilters] = useState(false);
@@ -84,11 +75,12 @@ export function PublicationsList({ publications }: PublicationsListProps) {
     return Array.from(uniqueQualis).sort();
   }, [publications]);
 
-  // Get unique publication types
+  // Get unique publication types from category.name
   const pubTypes = useMemo(() => {
     const uniqueTypes = new Set<string>();
     publications.forEach((p) => {
-      if (p.publicationType) uniqueTypes.add(p.publicationType);
+      const categoryName = p.category?.name;
+      if (categoryName) uniqueTypes.add(categoryName);
     });
     return Array.from(uniqueTypes);
   }, [publications]);
@@ -109,8 +101,8 @@ export function PublicationsList({ publications }: PublicationsListProps) {
         if (!matchesSearch) return false;
       }
 
-      // Type filter
-      if (selectedType !== 'Todos' && pub.publicationType !== selectedType) {
+      // Type filter (using category.name)
+      if (selectedType !== 'Todos' && pub.category?.name !== selectedType) {
         return false;
       }
 
@@ -147,10 +139,10 @@ export function PublicationsList({ publications }: PublicationsListProps) {
   const stats = useMemo(() => {
     const totalCitations = filteredPublications.reduce((acc, p) => acc + (p.citationCount || 0), 0);
     const journals = filteredPublications.filter(
-      (p) => p.publicationType === 'Journal Article'
+      (p) => p.category?.name === 'Journal Article'
     ).length;
     const conferences = filteredPublications.filter(
-      (p) => p.publicationType === 'Conference Paper'
+      (p) => p.category?.name === 'Conference Paper'
     ).length;
     return { total: filteredPublications.length, totalCitations, journals, conferences };
   }, [filteredPublications]);
@@ -170,7 +162,7 @@ export function PublicationsList({ publications }: PublicationsListProps) {
     const rows = filteredPublications.map((pub) => [
       pub.title,
       pub.authorsText,
-      pub.publicationType,
+      pub.category?.name || '',
       pub.year.toString(),
       pub.journalName || pub.conferenceName || '',
       pub.doi || '',
@@ -281,15 +273,14 @@ export function PublicationsList({ publications }: PublicationsListProps) {
               {pubTypes.map((type) => (
                 <button
                   key={type}
-                  onClick={() => setSelectedType(type as PublicationType)}
+                  onClick={() => setSelectedType(type)}
                   className={`px-3 py-1.5 text-xs font-tech rounded border transition-all ${
                     selectedType === type
                       ? 'bg-ufam-primary text-white border-ufam-primary'
                       : 'bg-transparent text-ufam-secondary border-white/10 hover:border-ufam-primary/50'
                   }`}
                 >
-                  {typeLabels[type as PublicationType] || type} (
-                  {publications.filter((p) => p.publicationType === type).length})
+                  {type} ({publications.filter((p) => p.category?.name === type).length})
                 </button>
               ))}
             </div>
@@ -446,7 +437,11 @@ export function PublicationsList({ publications }: PublicationsListProps) {
 
 // Publication Card Component
 function PublicationCard({ publication }: { publication: PublicationFlat }) {
-  const typeColor = getTypeColor(publication.publicationType);
+  const categoryName = publication.category?.name;
+  const categoryColor = publication.category?.color;
+
+  // Use color from database if available, otherwise fallback
+  const typeColor = categoryColor ? `${categoryColor} border-current` : getTypeColor(categoryName);
 
   return (
     <Link
@@ -456,12 +451,14 @@ function PublicationCard({ publication }: { publication: PublicationFlat }) {
       <div className="flex flex-col md:flex-row md:items-start gap-4">
         <div className="flex-1 min-w-0">
           {/* Type Badge */}
-          <span
-            className={`inline-flex items-center gap-1.5 font-tech text-xs px-2 py-0.5 rounded border ${typeColor} mb-2`}
-          >
-            {getTypeIcon(publication.publicationType)}
-            {publication.publicationType}
-          </span>
+          {categoryName && (
+            <span
+              className={`inline-flex items-center gap-1.5 font-tech text-xs px-2 py-0.5 rounded border ${typeColor} mb-2`}
+            >
+              {getTypeIcon(categoryName)}
+              {categoryName}
+            </span>
+          )}
 
           {/* Title */}
           <h3 className="text-white font-bold group-hover:text-ufam-light transition-colors mb-2 line-clamp-2">

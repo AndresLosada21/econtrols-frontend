@@ -15,10 +15,38 @@ import {
   Award,
   Tag,
 } from 'lucide-react';
-import { getResearchLineBySlug, getResearchLines, getStrapiMediaUrl } from '@/lib/strapi';
+import {
+  getResearchLineBySlug,
+  getResearchLines,
+  getStrapiMediaUrl,
+  getResearchDetailedPageSettings,
+} from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
 import ProjectCard from '@/components/cards/ProjectCard';
-import type { FacultyMemberFlat, ProjectFlat, PublicationFlat } from '@/types/strapi';
+import type {
+  FacultyMemberFlat,
+  ProjectFlat,
+  PublicationFlat,
+  ResearchCategoryFlat,
+} from '@/types/strapi';
+
+// ============================================
+// Helper: Get category-specific badge colors
+// ============================================
+
+function getCategoryBadgeColors(category: ResearchCategoryFlat): string {
+  const colorMap: Record<string, string> = {
+    'text-ufam-light': 'bg-ufam-primary/20 text-ufam-light border-ufam-primary/30',
+    'text-blue-400': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    'text-green-400': 'bg-green-500/20 text-green-400 border-green-500/30',
+    'text-purple-400': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    'text-amber-400': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    'text-red-400': 'bg-red-500/20 text-red-400 border-red-500/30',
+    'text-cyan-400': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  };
+
+  return colorMap[category.color] || 'bg-ufam-primary/20 text-ufam-light border-ufam-primary/30';
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -83,28 +111,47 @@ export async function generateStaticParams() {
   }
 }
 
-function getCategoryColor(category: string): string {
-  switch (category) {
-    case 'Principal':
-      return 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
-    case 'Secundaria':
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    case 'Emergente':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
-    default:
-      return 'bg-white/10 text-white border-white/20';
-  }
-}
-
 export default async function ResearchLineDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const researchLine = await getResearchLineBySlug(slug);
+
+  // Buscar linha de pesquisa e settings em paralelo
+  const [researchLine, detailedSettings] = await Promise.all([
+    getResearchLineBySlug(slug),
+    getResearchDetailedPageSettings(),
+  ]);
 
   if (!researchLine) {
     notFound();
   }
 
-  const categoryColor = getCategoryColor(researchLine.category);
+  // Criar objeto de labels com fallback completo
+  const labels = {
+    backButtonText: detailedSettings?.backButtonText || 'voltar para pesquisa',
+    descriptionLabel: detailedSettings?.descriptionLabel || '/// descrição',
+    descriptionTitle: detailedSettings?.descriptionTitle || 'Sobre a Linha de Pesquisa',
+    teamLabel: detailedSettings?.teamLabel || '/// equipe',
+    teamTitle: detailedSettings?.teamTitle || 'Pesquisadores',
+    projectsLabel: detailedSettings?.projectsLabel || '/// projetos',
+    projectsTitle: detailedSettings?.projectsTitle || 'Projetos Relacionados',
+    keywordsLabel: detailedSettings?.keywordsLabel || '/// palavras-chave',
+    keywordsTitle: detailedSettings?.keywordsTitle || 'Palavras-Chave',
+    applicationsLabel: detailedSettings?.applicationsLabel || '/// aplicações',
+    applicationsTitle: detailedSettings?.applicationsTitle || 'Aplicações Práticas',
+    publicationsLabel: detailedSettings?.publicationsLabel || '/// publicações',
+    publicationsTitle: detailedSettings?.publicationsTitle || 'Publicações Recentes',
+    teachingLabel: detailedSettings?.teachingLabel || '/// ensino',
+    teachingTitle: detailedSettings?.teachingTitle || 'Disciplinas e Cursos',
+    collaborationsLabel: detailedSettings?.collaborationsLabel || '/// colaborações',
+    collaborationsTitle: detailedSettings?.collaborationsTitle || 'Colaborações Externas',
+    facilitiesLabel: detailedSettings?.facilitiesLabel || '/// infraestrutura',
+    facilitiesTitle: detailedSettings?.facilitiesTitle || 'Infraestrutura',
+    ctaTitle: detailedSettings?.ctaTitle || 'Interessado nesta linha de pesquisa?',
+    ctaDescription:
+      detailedSettings?.ctaDescription || 'Entre em contato com nossa equipe para saber mais.',
+    ctaButtonLabel: detailedSettings?.ctaButtonLabel || 'entrar em contato',
+  };
+
+  const categoryColor = getCategoryBadgeColors(researchLine.category);
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -115,7 +162,7 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           className="inline-flex items-center gap-2 text-ufam-secondary hover:text-ufam-primary transition-colors font-tech text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          voltar para pesquisa
+          {labels.backButtonText}
         </Link>
       </div>
 
@@ -141,7 +188,7 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
               className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded mb-4 border ${categoryColor}`}
             >
               <Beaker className="w-4 h-4" />
-              {researchLine.category}
+              {researchLine.category.name}
             </span>
 
             {/* Title */}
@@ -161,9 +208,11 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// descricao'}
+                {labels.descriptionLabel}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Sobre esta Linha</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.descriptionTitle}
+              </h3>
             </FadeIn>
 
             <FadeIn delay={100}>
@@ -183,10 +232,10 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// pesquisadores'}
+                {labels.teamLabel}
               </h2>
               <h3 className="text-2xl font-bold text-white font-tech mb-8">
-                Equipe ({researchLine.facultyMembers.length})
+                {labels.teamTitle} ({researchLine.facultyMembers.length})
               </h3>
             </FadeIn>
 
@@ -213,7 +262,7 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
                     <p className="text-sm font-tech text-white group-hover:text-ufam-light transition-colors mb-1">
                       {member.displayName}
                     </p>
-                    <p className="text-xs text-ufam-secondary">{member.role}</p>
+                    <p className="text-xs text-ufam-secondary">{member.memberRole.name}</p>
                   </Link>
                 </FadeIn>
               ))}
@@ -228,10 +277,10 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// projetos'}
+                {labels.projectsLabel}
               </h2>
               <h3 className="text-2xl font-bold text-white font-tech mb-8">
-                Projetos Relacionados ({researchLine.projects.length})
+                {labels.projectsTitle} ({researchLine.projects.length})
               </h3>
             </FadeIn>
 
@@ -252,9 +301,11 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// palavras-chave'}
+                {labels.keywordsLabel}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Palavras-chave</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.keywordsTitle}
+              </h3>
             </FadeIn>
 
             <div className="flex flex-wrap gap-3">
@@ -277,9 +328,11 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// aplicacoes praticas'}
+                {labels.applicationsLabel}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Aplicações Práticas</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.applicationsTitle}
+              </h3>
             </FadeIn>
 
             <FadeIn delay={100}>
@@ -299,9 +352,11 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// ensino'}
+                {labels.teachingLabel}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Disciplinas e Cursos</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.teachingTitle}
+              </h3>
             </FadeIn>
 
             <FadeIn delay={100}>
@@ -321,10 +376,10 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// colaboracoes'}
+                {labels.collaborationsLabel}
               </h2>
               <h3 className="text-2xl font-bold text-white font-tech mb-8">
-                Colaborações Externas
+                {labels.collaborationsTitle}
               </h3>
             </FadeIn>
 
@@ -345,9 +400,11 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// infraestrutura'}
+                {labels.facilitiesLabel}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Infraestrutura</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.facilitiesTitle}
+              </h3>
             </FadeIn>
 
             <FadeIn delay={100}>
@@ -367,10 +424,10 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// publicacoes'}
+                {labels.publicationsLabel}
               </h2>
               <h3 className="text-2xl font-bold text-white font-tech mb-8">
-                Publicações Relacionadas ({researchLine.publications.length})
+                {labels.publicationsTitle} ({researchLine.publications.length})
               </h3>
             </FadeIn>
 
@@ -443,18 +500,13 @@ export default async function ResearchLineDetailPage({ params }: PageProps) {
       <section className="py-16">
         <div className="container mx-auto px-6 text-center">
           <FadeIn>
-            <h3 className="text-xl font-bold text-white font-tech mb-4">
-              Interessado nesta linha de pesquisa?
-            </h3>
-            <p className="text-ufam-secondary mb-6 max-w-xl mx-auto">
-              Entre em contato com nossa equipe para saber mais sobre oportunidades de colaboracao e
-              pesquisa.
-            </p>
+            <h3 className="text-xl font-bold text-white font-tech mb-4">{labels.ctaTitle}</h3>
+            <p className="text-ufam-secondary mb-6 max-w-xl mx-auto">{labels.ctaDescription}</p>
             <Link
               href="/#contact"
               className="inline-flex items-center gap-2 bg-ufam-primary text-white px-6 py-3 rounded font-tech text-sm hover:bg-ufam-primary/80 transition-colors lowercase"
             >
-              entrar em contato
+              {labels.ctaButtonLabel}
               <ExternalLink className="w-4 h-4" />
             </Link>
           </FadeIn>

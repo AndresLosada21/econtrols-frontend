@@ -42,6 +42,26 @@ export interface StrapiMedia {
   } | null;
 }
 
+export interface StrapiMediaMultiple {
+  data: Array<{
+    id: number;
+    attributes: {
+      name: string;
+      alternativeText: string | null;
+      caption: string | null;
+      width: number;
+      height: number;
+      formats: {
+        thumbnail?: StrapiImageFormat;
+        small?: StrapiImageFormat;
+        medium?: StrapiImageFormat;
+        large?: StrapiImageFormat;
+      };
+      url: string;
+    };
+  }> | null;
+}
+
 export interface StrapiImageFormat {
   name: string;
   hash: string;
@@ -63,7 +83,6 @@ export interface FacultyMemberAttributes {
   fullName: string;
   displayName: string;
   slug?: string;
-  role: 'Líder' | 'Co-líder' | 'Pesquisador Permanente' | 'Pesquisador Colaborador' | 'Pós-Doc';
   email: string;
   bio?: string;
   shortBio?: string;
@@ -99,6 +118,10 @@ export interface FacultyMemberAttributes {
   showAwards?: boolean;
   showInstitutionalPositions?: boolean;
   showCollaborations?: boolean;
+  showContact?: boolean;
+  showMetrics?: boolean;
+  showAcademicLinks?: boolean;
+  showSpecializations?: boolean;
   // Componentes
   academicFormation?: any[];
   awardsDistinctions?: any[];
@@ -106,6 +129,7 @@ export interface FacultyMemberAttributes {
   completedAdvisees?: any[];
   // Relações
   photo?: StrapiMedia;
+  memberRole?: StrapiResponse<StrapiData<MemberRoleAttributes>>;
   researchLines?: StrapiResponse<StrapiData<ResearchLineAttributes>[]>;
   coordinatedProjects?: StrapiResponse<StrapiData<ProjectAttributes>[]>;
   participatingProjects?: StrapiResponse<StrapiData<ProjectAttributes>[]>;
@@ -117,13 +141,32 @@ export interface FacultyMemberAttributes {
 
 export interface FacultyMember extends StrapiData<FacultyMemberAttributes> {}
 
+// Research Category (Dynamic Taxonomy)
+export interface ResearchCategoryAttributes {
+  name: string;
+  slug: string;
+  sectionTitle: string;
+  description?: string;
+  statsLabel?: string;
+  displayOrder: number;
+  color: string;
+  isActive: boolean;
+  researchLines?: StrapiResponse<StrapiData<ResearchLineAttributes>[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchCategory extends StrapiData<ResearchCategoryAttributes> {}
+
 // Research Line
 export interface ResearchLineAttributes {
   title: string;
   slug: string;
   shortDescription: string;
   fullDescription?: string;
-  category: 'Principal' | 'Secundária' | 'Emergente';
+  /** @deprecated Use `category` relation instead */
+  // category: 'Principal' | 'Secundária' | 'Emergente'; // Removido - agora é relação
+  category?: StrapiResponse<StrapiData<ResearchCategoryAttributes>>;
   icon?: string;
   iconName?: string; // Nome do ícone Lucide como fallback (ex: "settings", "cpu")
   isActive: boolean;
@@ -149,7 +192,6 @@ export interface ResearchLine extends StrapiData<ResearchLineAttributes> {}
 export interface ProjectAttributes {
   title: string;
   slug: string;
-  status: 'Em Andamento' | 'Concluído' | 'Pausado' | 'Planejado';
   summary?: string;
   shortDescription?: string;
   // Rich Text Fields
@@ -173,15 +215,31 @@ export interface ProjectAttributes {
   displayOrder?: number;
   // Media
   featuredImage?: StrapiMedia;
-  gallery?: StrapiMedia;
+  gallery?: StrapiMediaMultiple;
+  // Visibility Toggles
+  showDescription?: boolean;
+  showObjectives?: boolean;
+  showMethodology?: boolean;
+  showExpectedResults?: boolean;
+  showAchievedResults?: boolean;
+  showImpactLegacy?: boolean;
+  showTeam?: boolean;
+  showResearchLines?: boolean;
+  showPublications?: boolean;
+  showFunding?: boolean;
+  showGallery?: boolean;
+  showLinks?: boolean;
+  showKeywords?: boolean;
+  showPartners?: boolean;
   // Relationships (Backend names)
   researchLine?: StrapiResponse<StrapiData<ResearchLineAttributes>>;
   coordinator?: StrapiResponse<StrapiData<FacultyMemberAttributes>>;
   teamMembers?: StrapiResponse<StrapiData<FacultyMemberAttributes>[]>;
-  fundingAgencies?: StrapiResponse<StrapiData<FundingAgencyAttributes>[]>;
   relatedPublications?: StrapiResponse<StrapiData<PublicationAttributes>[]>;
+  /** Partners incluem agências de fomento (type.slug === 'funding-agency') e outros parceiros */
   relatedPartners?: StrapiResponse<StrapiData<PartnerAttributes>[]>;
   relatedNews?: StrapiResponse<StrapiData<NewsItemAttributes>[]>;
+  projectStatus?: StrapiResponse<StrapiData<ProjectStatusAttributes>>;
   seo?: SharedSeo;
   createdAt: string;
   updatedAt: string;
@@ -193,15 +251,6 @@ export interface Project extends StrapiData<ProjectAttributes> {}
 export interface PublicationAttributes {
   title: string;
   slug: string;
-  publicationType:
-    | 'Journal Article'
-    | 'Conference Paper'
-    | 'Book'
-    | 'Book Chapter'
-    | 'Thesis - PhD'
-    | 'Thesis - Masters'
-    | 'Technical Report'
-    | 'Software/Tool';
   authorsText: string;
   year: number;
   month?: number;
@@ -241,12 +290,57 @@ export interface PublicationAttributes {
   relatedProject?: StrapiResponse<StrapiData<ProjectAttributes>>;
   authors?: StrapiResponse<StrapiData<FacultyMemberAttributes>[]>;
   relatedNews?: StrapiResponse<StrapiData<NewsItemAttributes>[]>;
+  category?: StrapiResponse<StrapiData<PublicationCategoryAttributes>>;
   seo?: SharedSeo;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Publication extends StrapiData<PublicationAttributes> {}
+
+// Publication Category (Dynamic Taxonomy)
+export interface PublicationCategoryAttributes {
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicationCategory extends StrapiData<PublicationCategoryAttributes> {}
+
+// Project Status (Dynamic Taxonomy)
+export interface ProjectStatusAttributes {
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectStatus extends StrapiData<ProjectStatusAttributes> {}
+
+// Member Role (Dynamic Taxonomy)
+export interface MemberRoleAttributes {
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  description?: string;
+  isActive: boolean;
+  showInListing?: boolean;
+  sectionTitle?: string;
+  sectionDescription?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemberRole extends StrapiData<MemberRoleAttributes> {}
 
 // News Item
 export interface NewsItemAttributes {
@@ -305,15 +399,30 @@ export interface SoftwareToolAttributes {
 
 export interface SoftwareTool extends StrapiData<SoftwareToolAttributes> {}
 
+// Partner Type (Dynamic Taxonomy)
+export interface PartnerTypeAttributes {
+  name: string;
+  slug: string;
+  sectionTitle?: string;
+  description?: string;
+  displayOrder: number;
+  color: string;
+  statsLabel?: string;
+  isActive: boolean;
+  showInStats: boolean;
+  partners?: StrapiResponse<StrapiData<PartnerAttributes>[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PartnerType extends StrapiData<PartnerTypeAttributes> {}
+
 // Partner
 export interface PartnerAttributes {
   name: string;
-  partnerType:
-    | 'International University'
-    | 'National University'
-    | 'Research Institute'
-    | 'Industrial Partner'
-    | 'Funding Agency';
+  /** @deprecated Use `type` relation instead */
+  partnerType?: string;
+  type?: StrapiResponse<StrapiData<PartnerTypeAttributes>>;
   country: string;
   state?: string;
   city?: string;
@@ -329,25 +438,6 @@ export interface PartnerAttributes {
 }
 
 export interface Partner extends StrapiData<PartnerAttributes> {}
-
-// Funding Agency
-export interface FundingAgencyAttributes {
-  name: string;
-  fullName?: string;
-  acronym?: string;
-  type: 'Federal' | 'Estadual' | 'Municipal' | 'Internacional' | 'Privada' | 'Mista';
-  country: string;
-  websiteUrl?: string;
-  logo?: StrapiMedia;
-  description?: string;
-  isActive: boolean;
-  displayOrder?: number;
-  projects?: StrapiResponse<StrapiData<ProjectAttributes>[]>;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FundingAgency extends StrapiData<FundingAgencyAttributes> {}
 
 // Collaborator
 export interface CollaboratorAttributes {
@@ -365,18 +455,68 @@ export interface CollaboratorAttributes {
 
 export interface Collaborator extends StrapiData<CollaboratorAttributes> {}
 
+// Degree Level (Dynamic Taxonomy)
+export interface DegreeLevelAttributes {
+  name: string;
+  slug: string;
+  pluralName?: string;
+  displayOrder: number;
+  alumni?: StrapiResponse<StrapiData<AlumnusAttributes>[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DegreeLevel extends StrapiData<DegreeLevelAttributes> {}
+
+// Alumni Sector (Dynamic Taxonomy)
+export interface AlumniSectorAttributes {
+  name: string;
+  statsLabel?: string;
+  description?: string;
+  color?: string;
+  iconName?: string;
+  alumni?: StrapiResponse<StrapiData<AlumnusAttributes>[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlumniSector extends StrapiData<AlumniSectorAttributes> {}
+
+// Alumni Page Setting (Single Type)
+export interface AlumniPageSettingAttributes {
+  pageTitle: string;
+  pageDescription?: string;
+  seo?: SharedSeo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlumniPageSetting {
+  id: number;
+  attributes: AlumniPageSettingAttributes;
+}
+
 // Alumnus
 export interface AlumnusAttributes {
   fullName: string;
-  degreeLevel: 'Mestrado' | 'Doutorado' | 'Pós-Doutorado' | 'Iniciação Científica';
+  slug?: string;
+  /** @deprecated Use `degree` relation instead */
+  degreeLevel?: 'Mestrado' | 'Doutorado' | 'Pós-Doutorado' | 'Iniciação Científica';
+  degree?: StrapiResponse<StrapiData<DegreeLevelAttributes>>;
   thesisTitle?: string;
   advisor?: string;
   defenseYear?: number;
   currentPosition?: string;
   currentInstitution?: string;
+  researchTopic?: string;
+  /** @deprecated Use `sector` relation instead */
   currentSector?: 'Academia' | 'Indústria' | 'Governo' | 'Empreendedorismo';
+  sector?: StrapiResponse<StrapiData<AlumniSectorAttributes>>;
   linkedinUrl?: string;
   lattesUrl?: string;
+  email?: string;
+  publicationsCount?: number;
+  displayOrder?: number;
   photo?: StrapiMedia;
   createdAt: string;
   updatedAt: string;
@@ -514,76 +654,6 @@ export interface ProjectsPageSetting {
 }
 
 // People Page Setting (Single Type)
-export interface PeopleDetailLabels {
-  // Navegação
-  backButtonText: string;
-
-  // Biografia
-  bioLabel: string;
-  bioTitle: string;
-
-  // Contatos
-  contactsLabel: string;
-  contactsTitle: string;
-
-  // Métricas Acadêmicas
-  metricsLabel: string;
-  metricsTitle: string;
-  hIndexTooltip: string;
-  citationsLabel: string;
-  publicationsCountLabel: string;
-
-  // Formação Acadêmica
-  educationLabel: string;
-  educationTitle: string;
-
-  // Linhas de Pesquisa
-  researchLinesLabel: string;
-  researchLinesTitle: string;
-
-  // Projetos
-  projectsLabel: string;
-  projectsTitle: string;
-  coordinatedProjectsLabel: string;
-  participatingProjectsLabel: string;
-
-  // Publicações
-  publicationsLabel: string;
-  publicationsTitle: string;
-  publicationsEmptyState: string;
-
-  // Orientações
-  adviseesLabel: string;
-  adviseesTitle: string;
-  currentAdviseesLabel: string;
-  completedAdviseesLabel: string;
-  expectedDefenseLabel: string;
-  currentPositionLabel: string;
-
-  // Ensino
-  teachingLabel: string;
-  teachingTitle: string;
-  graduateCoursesLabel: string;
-  postgraduateCoursesLabel: string;
-
-  // Prêmios e Distinções
-  awardsLabel: string;
-  awardsTitle: string;
-  issuerLabel: string;
-
-  // Posições Institucionais
-  institutionalLabel: string;
-  institutionalTitle: string;
-
-  // Colaborações Internacionais
-  collaborationsLabel: string;
-  collaborationsTitle: string;
-
-  // Links Externos
-  viewProfileLabel: string;
-  websiteLabel: string;
-}
-
 export interface PeoplePageSettingAttributes {
   pageTitle: string;
   pageDescription: string;
@@ -591,7 +661,6 @@ export interface PeoplePageSettingAttributes {
   researchersSection?: LayoutSectionHeader;
   postdocsSection?: LayoutSectionHeader;
   alumniSection?: LayoutSectionHeader;
-  detailLabels?: PeopleDetailLabels;
   seo?: SharedSeo;
   createdAt?: string;
   updatedAt?: string;
@@ -600,6 +669,237 @@ export interface PeoplePageSettingAttributes {
 export interface PeoplePageSetting {
   id: number;
   attributes: PeoplePageSettingAttributes;
+}
+
+// People Detailed Page Setting (Single Type)
+export interface PeopleDetailedPageSettingAttributes {
+  backButtonText: string;
+  bioLabel: string;
+  bioTitle: string;
+  contactsLabel: string;
+  contactsTitle: string;
+  metricsLabel: string;
+  metricsTitle: string;
+  hIndexTooltip: string;
+  citationsLabel: string;
+  publicationsCountLabel: string;
+  educationLabel: string;
+  educationTitle: string;
+  researchLinesLabel: string;
+  researchLinesTitle: string;
+  projectsLabel: string;
+  projectsTitle: string;
+  coordinatedProjectsLabel: string;
+  participatingProjectsLabel: string;
+  publicationsLabel: string;
+  publicationsTitle: string;
+  publicationsEmptyState: string;
+  adviseesLabel: string;
+  adviseesTitle: string;
+  currentAdviseesLabel: string;
+  completedAdviseesLabel: string;
+  expectedDefenseLabel: string;
+  currentPositionLabel: string;
+  teachingLabel: string;
+  teachingTitle: string;
+  graduateCoursesLabel: string;
+  postgraduateCoursesLabel: string;
+  awardsLabel: string;
+  awardsTitle: string;
+  issuerLabel: string;
+  institutionalLabel: string;
+  institutionalTitle: string;
+  collaborationsLabel: string;
+  collaborationsTitle: string;
+  viewProfileLabel: string;
+  websiteLabel: string;
+}
+
+export interface PeopleDetailedPageSetting {
+  id: number;
+  attributes: PeopleDetailedPageSettingAttributes;
+}
+
+// Projects Detailed Page Setting (Single Type)
+export interface ProjectsDetailedPageSettingAttributes {
+  backButtonText: string;
+  descriptionLabel: string;
+  descriptionTitle: string;
+  teamLabel: string;
+  teamTitle: string;
+  researchLinesLabel: string;
+  researchLinesTitle: string;
+  objectivesLabel: string;
+  objectivesTitle: string;
+  methodologyLabel: string;
+  methodologyTitle: string;
+  resultsLabel: string;
+  resultsTitle: string;
+  expectedResultsLabel: string;
+  expectedResultsTitle: string;
+  achievedResultsLabel: string;
+  achievedResultsTitle: string;
+  impactLabel: string;
+  impactTitle: string;
+  publicationsLabel: string;
+  publicationsTitle: string;
+  linksLabel: string;
+  linksTitle: string;
+  keywordsLabel: string;
+  keywordsTitle: string;
+  fundingAgencyLabel: string;
+  fundingLabel: string;
+  fundingTitle: string;
+  fundingAmountLabel: string;
+  periodLabel: string;
+  coordinatorLabel: string;
+  processLabel: string;
+  durationLabel: string;
+  progressLabel: string;
+  websiteLabel: string;
+  websiteDescription: string;
+  repositoryLabel: string;
+  repositoryDescription: string;
+  partnersLabel: string;
+  partnersTitle: string;
+  galleryLabel: string;
+  galleryTitle: string;
+  citationsLabel: string;
+}
+
+export interface ProjectsDetailedPageSetting {
+  id: number;
+  attributes: ProjectsDetailedPageSettingAttributes;
+}
+
+// Research Detailed Page Setting (Single Type)
+export interface ResearchDetailedPageSettingAttributes {
+  backButtonText: string;
+  descriptionLabel: string;
+  descriptionTitle: string;
+  teamLabel: string;
+  teamTitle: string;
+  projectsLabel: string;
+  projectsTitle: string;
+  keywordsLabel: string;
+  keywordsTitle: string;
+  applicationsLabel: string;
+  applicationsTitle: string;
+  publicationsLabel: string;
+  publicationsTitle: string;
+  teachingLabel: string;
+  teachingTitle: string;
+  collaborationsLabel: string;
+  collaborationsTitle: string;
+  facilitiesLabel: string;
+  facilitiesTitle: string;
+  ctaTitle: string;
+  ctaDescription: string;
+  ctaButtonLabel: string;
+}
+
+export interface ResearchDetailedPageSetting {
+  id: number;
+  attributes: ResearchDetailedPageSettingAttributes;
+}
+
+// Publications Page Setting (Single Type)
+export interface PublicationsPageSettingAttributes {
+  pageTitle: string;
+  pageDescription: string;
+  emptyStateMessage: string;
+  totalLabel: string;
+  citationsLabel: string;
+  journalsLabel: string;
+  conferencesLabel: string;
+  allTabLabel: string;
+  journalsTabLabel: string;
+  conferencesTabLabel: string;
+  chaptersTabLabel: string;
+  thesesTabLabel: string;
+  seo?: SharedSeo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicationsPageSetting {
+  id: number;
+  attributes: PublicationsPageSettingAttributes;
+}
+
+// Publications Detailed Page Setting (Single Type)
+export interface PublicationsDetailedPageSettingAttributes {
+  backButtonText: string;
+  abstractLabel: string;
+  abstractTitle: string;
+  authorsLabel: string;
+  authorsTitle: string;
+  researchLinesLabel: string;
+  researchLinesTitle: string;
+  detailsTitle: string;
+  awardTitle: string;
+  citationButtonLabel: string;
+  downloadButtonLabel: string;
+  relatedTitle: string;
+  viewAllText: string;
+  doiLabel: string;
+}
+
+export interface PublicationsDetailedPageSetting {
+  id: number;
+  attributes: PublicationsDetailedPageSettingAttributes;
+}
+
+// News Page Setting (Single Type)
+export interface NewsPageSettingAttributes {
+  pageTitle: string;
+  pageDescription: string;
+  emptyStateMessage: string;
+  featuredLabel: string;
+  allNewsLabel: string;
+  categoriesLabel: string;
+  readMoreLabel: string;
+  seo?: SharedSeo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewsPageSetting {
+  id: number;
+  attributes: NewsPageSettingAttributes;
+}
+
+// News Detailed Page Setting (Single Type)
+export interface NewsDetailedPageSettingAttributes {
+  backButtonText: string;
+  relatedTitle: string;
+  shareTitle: string;
+  tagsLabel: string;
+  viewAllText: string;
+}
+
+export interface NewsDetailedPageSetting {
+  id: number;
+  attributes: NewsDetailedPageSettingAttributes;
+}
+
+// Partners Page Setting (Single Type)
+export interface PartnersPageSettingAttributes {
+  pageTitle: string;
+  pageDescription?: string;
+  statsLabelTotal: string;
+  statsLabelCountries: string;
+  globalPresenceTitle?: string;
+  globalPresenceDescription?: string;
+  emptyStateMessage: string;
+  seo?: SharedSeo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PartnersPageSetting {
+  id: number;
+  attributes: PartnersPageSettingAttributes;
 }
 
 // Homepage Setting (Single Type)
@@ -677,7 +977,6 @@ export interface FacultyMemberFlat {
   slug?: string;
   fullName: string;
   displayName: string;
-  role: string;
   email: string;
   phone?: string;
   room?: string;
@@ -696,6 +995,8 @@ export interface FacultyMemberFlat {
   displayOrder?: number;
   isActive: boolean;
   photoUrl?: string;
+  /** Dynamic role from Strapi - taxonomia dinâmica */
+  memberRole: MemberRoleFlat;
   // Relações e campos complexos
   researchLines?: ResearchLineFlat[];
   publications?: PublicationFlat[];
@@ -734,12 +1035,31 @@ export interface FacultyMemberDetail extends FacultyMemberFlat {
   showAwards?: boolean;
   showInstitutionalPositions?: boolean;
   showCollaborations?: boolean;
+  showContact?: boolean;
+  showMetrics?: boolean;
+  showAcademicLinks?: boolean;
+  showSpecializations?: boolean;
   // Relacionamentos populados
   researchLines: ResearchLineFlat[];
   coordinatedProjects?: ProjectFlat[];
   participatingProjects?: ProjectFlat[];
   publications: PublicationFlat[];
+  /** Dynamic role from Strapi - taxonomia dinâmica (inherited from FacultyMemberFlat) */
+  memberRole: MemberRoleFlat;
   seo?: SharedSeo;
+}
+
+// Research Category Flat (for components)
+export interface ResearchCategoryFlat {
+  id: number;
+  name: string;
+  slug: string;
+  sectionTitle: string;
+  description?: string;
+  statsLabel?: string;
+  displayOrder: number;
+  color: string;
+  isActive: boolean;
 }
 
 export interface ResearchLineFlat {
@@ -748,7 +1068,8 @@ export interface ResearchLineFlat {
   slug: string;
   shortDescription: string;
   fullDescription?: string;
-  category: string;
+  /** Dynamic category from Strapi - taxonomia dinâmica */
+  category: ResearchCategoryFlat;
   icon?: string;
   iconName?: string;
   isActive: boolean;
@@ -761,13 +1082,15 @@ export interface ProjectFlat {
   title: string;
   slug: string;
   shortDescription?: string;
-  status: string;
   startDate?: string;
   endDate?: string;
   showOnHomepage: boolean;
   displayOrder?: number;
   featuredImageUrl?: string;
-  fundingAgencies?: FundingAgencyFlat[];
+  /** Parceiros que são agências de fomento (filtrados de relatedPartners onde type.slug === 'funding-agency') */
+  fundingAgencyPartners?: PartnerFlat[];
+  /** Dynamic status from Strapi - taxonomia dinâmica */
+  projectStatus: ProjectStatusFlat;
 }
 
 export interface ProjectDetail extends ProjectFlat {
@@ -788,15 +1111,65 @@ export interface ProjectDetail extends ProjectFlat {
   websiteUrl?: string;
   repositoryUrl?: string;
   keywords?: string[];
-  gallery?: StrapiMedia;
+  gallery?: StrapiMediaMultiple;
+  // Visibility Toggles
+  showDescription?: boolean;
+  showObjectives?: boolean;
+  showMethodology?: boolean;
+  showExpectedResults?: boolean;
+  showAchievedResults?: boolean;
+  showImpactLegacy?: boolean;
+  showTeam?: boolean;
+  showResearchLines?: boolean;
+  showPublications?: boolean;
+  showFunding?: boolean;
+  showGallery?: boolean;
+  showLinks?: boolean;
+  showKeywords?: boolean;
+  showPartners?: boolean;
   // Relationships mapped to page-friendly names
   coordinator?: FacultyMemberFlat;
   team: FacultyMemberFlat[]; // Mapped from teamMembers
-  fundingAgencies: FundingAgencyFlat[]; // Mapped from fundingAgencies
+  /** Parceiros que são agências de fomento (filtrados de relatedPartners onde type.slug === 'funding-agency') */
+  fundingAgencyPartners: PartnerFlat[];
   researchLines: ResearchLineFlat[]; // Mapped from researchLine (encapsulated in array)
   publications: PublicationFlat[]; // Mapped from relatedPublications
   partners: PartnerFlat[]; // Mapped from relatedPartners
+  /** Dynamic status from Strapi - taxonomia dinâmica (inherited from ProjectFlat) */
+  projectStatus: ProjectStatusFlat;
   seo?: SharedSeo;
+}
+
+// Publication Category Flat (for components)
+export interface PublicationCategoryFlat {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+}
+
+// Project Status Flat (for components)
+export interface ProjectStatusFlat {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  description?: string;
+}
+
+// Member Role Flat (for components)
+export interface MemberRoleFlat {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  description?: string;
+  showInListing?: boolean;
+  sectionTitle?: string;
+  sectionDescription?: string;
 }
 
 export interface PublicationFlat {
@@ -804,7 +1177,6 @@ export interface PublicationFlat {
   title: string;
   slug: string;
   authorsText: string;
-  publicationType: string;
   year: number;
   journalName?: string;
   conferenceName?: string;
@@ -815,6 +1187,8 @@ export interface PublicationFlat {
   keywords?: string[];
   abstract?: string;
   citationBibtex?: string;
+  /** Dynamic category from Strapi - taxonomia dinâmica */
+  category?: PublicationCategoryFlat;
 }
 
 export interface PublicationDetail extends PublicationFlat {
@@ -896,7 +1270,10 @@ export interface SoftwareToolFlat {
 export interface PartnerFlat {
   id: number;
   name: string;
-  partnerType: string;
+  /** @deprecated Use `type` object instead */
+  partnerType?: string;
+  /** Dynamic type from Strapi - taxonomia dinâmica */
+  type: PartnerTypeFlat;
   country: string;
   city?: string;
   websiteUrl?: string;
@@ -904,30 +1281,62 @@ export interface PartnerFlat {
   logoUrl?: string;
 }
 
-export interface FundingAgencyFlat {
+// Partner Type Flat (for components)
+export interface PartnerTypeFlat {
   id: number;
   name: string;
-  fullName?: string;
-  acronym?: string;
-  type: string;
-  country: string;
-  websiteUrl?: string;
+  slug: string;
+  sectionTitle?: string;
+  description?: string;
+  displayOrder: number;
+  color: string;
+  statsLabel?: string;
   isActive: boolean;
-  logoUrl?: string;
+  showInStats: boolean;
+}
+
+// Degree Level Flat (for components)
+export interface DegreeLevelFlat {
+  id: number;
+  name: string;
+  slug: string;
+  pluralName?: string;
+  displayOrder: number;
+}
+
+// Alumni Sector Flat (for components)
+export interface AlumniSectorFlat {
+  id: number;
+  name: string;
+  statsLabel?: string;
+  description?: string;
+  color?: string;
+  iconName?: string;
 }
 
 export interface AlumnusFlat {
   id: number;
   fullName: string;
-  degreeLevel: string;
+  slug?: string;
+  /** @deprecated Use `degree` object instead */
+  degreeLevel?: string;
+  /** Dynamic degree from Strapi - taxonomia dinâmica */
+  degree: DegreeLevelFlat;
   thesisTitle?: string;
   advisor?: string;
   defenseYear?: number;
   currentPosition?: string;
   currentInstitution?: string;
+  researchTopic?: string;
+  /** @deprecated Use `sector` object instead */
   currentSector?: string;
+  /** Dynamic sector from Strapi - taxonomia dinâmica */
+  sector?: AlumniSectorFlat;
   linkedinUrl?: string;
   lattesUrl?: string;
+  email?: string;
+  publicationsCount?: number;
+  displayOrder?: number;
   photoUrl?: string;
 }
 
@@ -955,4 +1364,117 @@ export interface ResearchLineDetail extends ResearchLineFlat {
 
   // SEO é obrigatório na página de detalhes
   seo: SharedSeo;
+}
+
+// ============================================
+// Layout Component Interfaces (Navigation)
+// ============================================
+
+/**
+ * Menu Link - Componente reutilizável para links de navegação
+ * Usado tanto no Navbar quanto no Footer
+ */
+export interface LayoutMenuLink {
+  id: number;
+  label: string;
+  url: string;
+  order?: number;
+  isExternal: boolean;
+  icon?: string;
+}
+
+/**
+ * Footer Menu Column - Coluna de links no footer
+ * Contém um título e uma lista de links
+ */
+export interface LayoutFooterMenuColumn {
+  id: number;
+  title: string;
+  order?: number;
+  links: LayoutMenuLink[];
+}
+
+/**
+ * CTA Button - Botão de call-to-action
+ */
+export interface LayoutCtaButton {
+  id: number;
+  label: string;
+  url: string;
+  isExternal: boolean;
+  variant: 'primary' | 'secondary' | 'outline' | 'ghost';
+  isVisible: boolean;
+}
+
+/**
+ * Contact Info - Informações de contato
+ */
+export interface LayoutContactInfo {
+  id: number;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+}
+
+/**
+ * Social Link - Link para redes sociais
+ */
+export interface SharedSocialLink {
+  id: number;
+  platform: 'linkedin' | 'github' | 'twitter' | 'youtube' | 'instagram' | 'facebook';
+  url: string;
+  isVisible: boolean;
+}
+
+// ============================================
+// Navbar Settings (Single Type)
+// ============================================
+
+export interface NavbarSettingAttributes {
+  logo?: StrapiMedia;
+  logoAlt?: string;
+  siteName?: string;
+  mainMenu: LayoutMenuLink[];
+  ctaButton?: LayoutCtaButton;
+  showSearch: boolean;
+  isSticky: boolean;
+  transparentOnTop: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NavbarSetting {
+  id: number;
+  attributes: NavbarSettingAttributes;
+}
+
+// ============================================
+// Footer Settings (Single Type)
+// ============================================
+
+export interface FooterSettingAttributes {
+  logo?: StrapiMedia;
+  logoAlt?: string;
+  siteName?: string;
+  description?: string;
+  institutionName?: string;
+  departmentName?: string;
+  contactInfo?: LayoutContactInfo;
+  socialLinks?: SharedSocialLink[];
+  menuColumns: LayoutFooterMenuColumn[];
+  copyrightText?: string;
+  bottomText?: string;
+  showNewsletter: boolean;
+  newsletterTitle?: string;
+  newsletterDescription?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FooterSetting {
+  id: number;
+  attributes: FooterSettingAttributes;
 }

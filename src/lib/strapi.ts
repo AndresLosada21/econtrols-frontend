@@ -4,13 +4,21 @@ import type {
   StrapiData,
   FacultyMemberAttributes,
   ResearchLineAttributes,
+  ResearchCategoryAttributes,
   ProjectAttributes,
   PublicationAttributes,
+  PublicationCategoryAttributes,
+  ProjectStatusAttributes,
+  MemberRoleAttributes,
+  PartnerTypeAttributes,
   NewsItemAttributes,
   SoftwareToolAttributes,
   PartnerAttributes,
   CollaboratorAttributes,
   AlumnusAttributes,
+  DegreeLevelAttributes,
+  AlumniSectorAttributes,
+  AlumniPageSettingAttributes,
   TagAttributes,
   DashboardMetricAttributes,
   HomepageSettingAttributes,
@@ -20,21 +28,42 @@ import type {
   ProjectsPageSetting,
   PeoplePageSettingAttributes,
   PeoplePageSetting,
+  PeopleDetailedPageSettingAttributes,
+  PeopleDetailedPageSetting,
+  ProjectsDetailedPageSettingAttributes,
+  ProjectsDetailedPageSetting,
+  ResearchDetailedPageSettingAttributes,
+  ResearchDetailedPageSetting,
+  PublicationsPageSettingAttributes,
+  PublicationsPageSetting,
+  PublicationsDetailedPageSettingAttributes,
+  PublicationsDetailedPageSetting,
+  NewsPageSettingAttributes,
+  NewsPageSetting,
+  NewsDetailedPageSettingAttributes,
+  NewsDetailedPageSetting,
+  PartnersPageSettingAttributes,
+  PartnersPageSetting,
   FacultyMemberFlat,
   FacultyMemberDetail,
   ResearchLineFlat,
   ResearchLineDetail,
+  ResearchCategoryFlat,
   ProjectFlat,
   ProjectDetail,
   PublicationFlat,
   PublicationDetail,
+  PublicationCategoryFlat,
+  ProjectStatusFlat,
+  MemberRoleFlat,
+  PartnerTypeFlat,
   NewsItemFlat,
   NewsItemDetail,
   SoftwareToolFlat,
   PartnerFlat,
-  FundingAgencyFlat,
-  FundingAgencyAttributes,
   AlumnusFlat,
+  DegreeLevelFlat,
+  AlumniSectorFlat,
 } from '@/types/strapi';
 
 // ============================================
@@ -112,12 +141,37 @@ export function getStrapiMediaUrl(url: string | undefined | null): string | unde
 
 export function flattenFacultyMember(data: StrapiData<FacultyMemberAttributes>): FacultyMemberFlat {
   const { id, attributes } = data;
+
+  // Flatten memberRole - OBRIGATÓRIO (Taxonomia Dinâmica)
+  // Se não existir no banco, usa fallback padrão
+  const memberRoleData = attributes.memberRole?.data;
+  const memberRole = memberRoleData
+    ? {
+        id: memberRoleData.id,
+        name: memberRoleData.attributes.name,
+        slug: memberRoleData.attributes.slug,
+        color: memberRoleData.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        displayOrder: memberRoleData.attributes.displayOrder || 0,
+        description: memberRoleData.attributes.description,
+        showInListing: memberRoleData.attributes.showInListing,
+        sectionTitle: memberRoleData.attributes.sectionTitle,
+        sectionDescription: memberRoleData.attributes.sectionDescription,
+      }
+    : {
+        // Fallback para membros sem role definido
+        id: 0,
+        name: 'Sem Papel',
+        slug: 'sem-papel',
+        color: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        displayOrder: 999,
+      };
+
   return {
     id,
     slug: attributes.slug,
     fullName: attributes.fullName,
     displayName: attributes.displayName,
-    role: attributes.role,
+    memberRole,
     email: attributes.email,
     phone: attributes.phone,
     room: attributes.room,
@@ -147,13 +201,41 @@ export function flattenResearchLine(data: StrapiData<ResearchLineAttributes>): R
     getStrapiMediaUrl(attributes.featuredImage?.data?.attributes?.url) ||
     getStrapiMediaUrl(attributes.image?.data?.attributes?.url);
 
+  // Flatten category - OBRIGATÓRIO (Taxonomia Dinâmica)
+  // Se não existir no banco, usa fallback padrão
+  const categoryData = attributes.category?.data;
+  const category = categoryData
+    ? {
+        id: categoryData.id,
+        name: categoryData.attributes.name,
+        slug: categoryData.attributes.slug,
+        sectionTitle: categoryData.attributes.sectionTitle || categoryData.attributes.name,
+        description: categoryData.attributes.description,
+        statsLabel: categoryData.attributes.statsLabel,
+        displayOrder: categoryData.attributes.displayOrder || 0,
+        color: categoryData.attributes.color || 'text-ufam-light',
+        isActive: categoryData.attributes.isActive ?? true,
+      }
+    : {
+        // Fallback para linhas sem categoria definida
+        id: 0,
+        name: 'Principal',
+        slug: 'principal',
+        sectionTitle: 'Áreas Principais de Pesquisa',
+        description: '/// principais',
+        statsLabel: 'principais',
+        displayOrder: 1,
+        color: 'text-ufam-light',
+        isActive: true,
+      };
+
   return {
     id,
     title: attributes.title,
     slug: attributes.slug,
     shortDescription: attributes.shortDescription,
     fullDescription: attributes.fullDescription,
-    category: attributes.category,
+    category,
     icon: attributes.icon,
     iconName: attributes.iconName,
     isActive: attributes.isActive,
@@ -164,44 +246,68 @@ export function flattenResearchLine(data: StrapiData<ResearchLineAttributes>): R
 
 export function flattenProject(data: StrapiData<ProjectAttributes>): ProjectFlat {
   const { id, attributes } = data;
+
+  // Flatten projectStatus - OBRIGATÓRIO (Taxonomia Dinâmica)
+  // Se não existir no banco, usa fallback padrão
+  const projectStatusData = attributes.projectStatus?.data;
+  const projectStatus = projectStatusData
+    ? {
+        id: projectStatusData.id,
+        name: projectStatusData.attributes.name,
+        slug: projectStatusData.attributes.slug,
+        color:
+          projectStatusData.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        displayOrder: projectStatusData.attributes.displayOrder || 0,
+        description: projectStatusData.attributes.description,
+      }
+    : {
+        // Fallback para projetos sem status definido
+        id: 0,
+        name: 'Sem Status',
+        slug: 'sem-status',
+        color: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        displayOrder: 999,
+      };
+
+  // Flatten relatedPartners e filtra por funding-agency
+  const allPartners = attributes.relatedPartners?.data?.map(flattenPartner) || [];
+  const fundingAgencyPartners = allPartners.filter((p) => p.type?.slug === 'funding-agency');
+
   return {
     id,
     title: attributes.title,
     slug: attributes.slug,
     shortDescription: attributes.shortDescription,
-    status: attributes.status,
     startDate: attributes.startDate,
     endDate: attributes.endDate,
     showOnHomepage: attributes.showOnHomepage,
     displayOrder: attributes.displayOrder,
     featuredImageUrl: getStrapiMediaUrl(attributes.featuredImage?.data?.attributes?.url),
-    fundingAgencies: attributes.fundingAgencies?.data?.map(flattenFundingAgency) || [],
-  };
-}
-
-export function flattenFundingAgency(data: StrapiData<FundingAgencyAttributes>): FundingAgencyFlat {
-  const { id, attributes } = data;
-  return {
-    id,
-    name: attributes.name,
-    fullName: attributes.fullName,
-    acronym: attributes.acronym,
-    type: attributes.type,
-    country: attributes.country,
-    websiteUrl: attributes.websiteUrl,
-    isActive: attributes.isActive,
-    logoUrl: getStrapiMediaUrl(attributes.logo?.data?.attributes?.url),
+    fundingAgencyPartners: fundingAgencyPartners.length > 0 ? fundingAgencyPartners : undefined,
+    projectStatus,
   };
 }
 
 export function flattenPublication(data: StrapiData<PublicationAttributes>): PublicationFlat {
   const { id, attributes } = data;
+
+  // Flatten category if available (Taxonomia Dinâmica)
+  const categoryData = attributes.category?.data;
+  const category = categoryData
+    ? {
+        id: categoryData.id,
+        name: categoryData.attributes.name,
+        slug: categoryData.attributes.slug,
+        color: categoryData.attributes.color || 'bg-slate-500/20 text-slate-400',
+        displayOrder: categoryData.attributes.displayOrder || 0,
+      }
+    : undefined;
+
   return {
     id,
     title: attributes.title,
     slug: attributes.slug,
     authorsText: attributes.authorsText,
-    publicationType: attributes.publicationType,
     year: attributes.year,
     journalName: attributes.journalName,
     conferenceName: attributes.conferenceName,
@@ -212,6 +318,7 @@ export function flattenPublication(data: StrapiData<PublicationAttributes>): Pub
     keywords: attributes.keywords,
     abstract: attributes.abstract,
     citationBibtex: attributes.citationBibtex,
+    category,
   };
 }
 
@@ -245,16 +352,73 @@ export function flattenSoftwareTool(data: StrapiData<SoftwareToolAttributes>): S
 
 export function flattenPartner(data: StrapiData<PartnerAttributes>): PartnerFlat {
   const { id, attributes } = data;
+
+  // Flatten type - OBRIGATÓRIO (Taxonomia Dinâmica)
+  // Se não existir no banco, usa fallback padrão
+  const typeData = attributes.type?.data;
+  const type = typeData
+    ? {
+        id: typeData.id,
+        name: typeData.attributes.name,
+        slug: typeData.attributes.slug,
+        sectionTitle: typeData.attributes.sectionTitle,
+        description: typeData.attributes.description,
+        displayOrder: typeData.attributes.displayOrder || 0,
+        color: typeData.attributes.color || 'text-ufam-primary',
+        statsLabel: typeData.attributes.statsLabel,
+        isActive: typeData.attributes.isActive ?? true,
+        showInStats: typeData.attributes.showInStats ?? false,
+      }
+    : {
+        // Fallback para parceiros sem tipo definido (migração)
+        id: 0,
+        name: attributes.partnerType || 'Sem Tipo',
+        slug: 'sem-tipo',
+        sectionTitle: 'Outros Parceiros',
+        description: '/// outros',
+        displayOrder: 999,
+        color: 'text-gray-400',
+        isActive: true,
+        showInStats: false,
+      };
+
   return {
     id,
     name: attributes.name,
-    partnerType: attributes.partnerType,
+    partnerType: type.name, // Mantém para retrocompatibilidade
+    type,
     country: attributes.country,
     city: attributes.city,
     websiteUrl: attributes.websiteUrl,
     isActive: attributes.isActive,
     logoUrl: getStrapiMediaUrl(attributes.logo?.data?.attributes?.url),
   };
+}
+
+// ============================================
+// API Functions - Member Roles (Dynamic Taxonomy)
+// ============================================
+
+export async function getMemberRoles(): Promise<MemberRoleFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<MemberRoleAttributes>[]>>(
+    'member-roles',
+    {
+      sort: ['displayOrder:asc'],
+      filters: { isActive: { $eq: true } },
+    }
+  );
+
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    color: item.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    displayOrder: item.attributes.displayOrder || 0,
+    description: item.attributes.description,
+    showInListing: item.attributes.showInListing,
+    sectionTitle: item.attributes.sectionTitle,
+    sectionDescription: item.attributes.sectionDescription,
+  }));
 }
 
 // ============================================
@@ -265,7 +429,7 @@ export async function getFacultyMembers(options: FetchOptions = {}): Promise<Fac
   const response = await fetchAPI<StrapiResponse<StrapiData<FacultyMemberAttributes>[]>>(
     'faculty-members',
     {
-      populate: ['photo', 'researchLines'],
+      populate: ['photo', 'researchLines', 'memberRole'],
       sort: ['displayOrder:asc', 'fullName:asc'],
       ...options,
     }
@@ -302,10 +466,11 @@ export async function getFacultyMemberBySlug(slug: string): Promise<FacultyMembe
       filters: { slug: { $eq: slug } },
       populate: {
         photo: true,
+        memberRole: true,
         researchLines: { populate: ['featuredImage', 'image', 'icon'] },
-        coordinatedProjects: { populate: ['featuredImage'] },
-        participatingProjects: { populate: ['featuredImage'] },
-        publications: true,
+        coordinatedProjects: { populate: ['featuredImage', 'projectStatus'] },
+        participatingProjects: { populate: ['featuredImage', 'projectStatus'] },
+        publications: { populate: ['category'] },
         seo: { populate: '*' },
       },
     }
@@ -342,6 +507,10 @@ export async function getFacultyMemberBySlug(slug: string): Promise<FacultyMembe
     showAwards: attrs.showAwards,
     showInstitutionalPositions: attrs.showInstitutionalPositions,
     showCollaborations: attrs.showCollaborations,
+    showContact: attrs.showContact,
+    showMetrics: attrs.showMetrics,
+    showAcademicLinks: attrs.showAcademicLinks,
+    showSpecializations: attrs.showSpecializations,
     // Relacionamentos
     researchLines: attrs.researchLines?.data?.map(flattenResearchLine) || [],
     coordinatedProjects: attrs.coordinatedProjects?.data?.map(flattenProject) || [],
@@ -352,6 +521,32 @@ export async function getFacultyMemberBySlug(slug: string): Promise<FacultyMembe
 }
 
 // ============================================
+// API Functions - Research Categories (Dynamic Taxonomy)
+// ============================================
+
+export async function getResearchCategories(): Promise<ResearchCategoryFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ResearchCategoryAttributes>[]>>(
+    'research-categories',
+    {
+      sort: ['displayOrder:asc'],
+      filters: { isActive: { $eq: true } },
+    }
+  );
+
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    sectionTitle: item.attributes.sectionTitle || item.attributes.name,
+    description: item.attributes.description,
+    statsLabel: item.attributes.statsLabel,
+    displayOrder: item.attributes.displayOrder || 0,
+    color: item.attributes.color || 'text-ufam-light',
+    isActive: item.attributes.isActive ?? true,
+  }));
+}
+
+// ============================================
 // API Functions - Research Lines
 // ============================================
 
@@ -359,7 +554,12 @@ export async function getResearchLines(options: FetchOptions = {}): Promise<Rese
   const response = await fetchAPI<StrapiResponse<StrapiData<ResearchLineAttributes>[]>>(
     'research-lines',
     {
-      populate: ['image', 'featuredImage', 'icon'],
+      populate: {
+        image: true,
+        featuredImage: true,
+        icon: true,
+        category: true,
+      },
       sort: ['displayOrder:asc', 'title:asc'],
       filters: { isActive: { $eq: true } },
       ...options,
@@ -382,16 +582,19 @@ export async function getResearchLineBySlug(slug: string): Promise<ResearchLineD
         image: true,
         featuredImage: true,
         icon: true,
+        category: true,
         seo: {
           populate: '*', // Garante que traga ogImage, twitterImage, etc.
         },
         facultyMembers: {
-          populate: ['photo'], // Foto dos membros
+          populate: ['photo', 'memberRole'], // Foto e role dos membros
         },
         relatedProjects: {
-          populate: ['featuredImage', 'coordinator'], // Projetos com imagem e coordenador
+          populate: ['featuredImage', 'coordinator', 'projectStatus'], // Projetos com imagem, coordenador e status
         },
-        relatedPublications: true, // Publicações (geralmente sem mídia pesada)
+        relatedPublications: {
+          populate: ['category'], // Publicações com categoria
+        },
       },
     }
   );
@@ -451,7 +654,8 @@ export async function getProjects(options: FetchOptions = {}): Promise<ProjectFl
       featuredImage: true,
       coordinator: true,
       researchLines: true,
-      fundingAgencies: { populate: ['logo'] },
+      relatedPartners: { populate: ['logo', 'type'] },
+      projectStatus: true,
     },
     sort: ['displayOrder:asc', 'startDate:desc'],
     ...options,
@@ -487,10 +691,10 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
       researchLine: { populate: ['coverImage', 'image', 'icon', 'featuredImage'] },
       coordinator: { populate: ['photo'] },
       teamMembers: { populate: ['photo'] },
-      fundingAgencies: { populate: ['logo'] },
       relatedPublications: true,
-      relatedPartners: { populate: ['logo'] },
+      relatedPartners: { populate: ['logo', 'type'] },
       relatedNews: { populate: ['coverImage'] },
+      projectStatus: true,
       seo: { populate: '*' },
     },
   });
@@ -509,8 +713,11 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
   // Map teamMembers -> team
   const team = attrs.teamMembers?.data?.map(flattenFacultyMember) || [];
 
-  // Map fundingAgencies
-  const fundingAgencies = attrs.fundingAgencies?.data?.map(flattenFundingAgency) || [];
+  // Map relatedPartners -> partners (todos os parceiros)
+  const partners = attrs.relatedPartners?.data?.map(flattenPartner) || [];
+
+  // Filtra parceiros que são agências de fomento
+  const fundingAgencyPartners = partners.filter((p) => p.type?.slug === 'funding-agency');
 
   // Map researchLine (singular) -> researchLines (array)
   const researchLines = attrs.researchLine?.data
@@ -519,9 +726,6 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
 
   // Map relatedPublications -> publications
   const publications = attrs.relatedPublications?.data?.map(flattenPublication) || [];
-
-  // Map relatedPartners -> partners
-  const partners = attrs.relatedPartners?.data?.map(flattenPartner) || [];
 
   return {
     ...flatBase,
@@ -542,10 +746,25 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
     repositoryUrl: attrs.repositoryUrl,
     keywords: attrs.keywords,
     gallery: attrs.gallery,
+    // Visibility Toggles
+    showDescription: attrs.showDescription,
+    showObjectives: attrs.showObjectives,
+    showMethodology: attrs.showMethodology,
+    showExpectedResults: attrs.showExpectedResults,
+    showAchievedResults: attrs.showAchievedResults,
+    showImpactLegacy: attrs.showImpactLegacy,
+    showTeam: attrs.showTeam,
+    showResearchLines: attrs.showResearchLines,
+    showPublications: attrs.showPublications,
+    showFunding: attrs.showFunding,
+    showGallery: attrs.showGallery,
+    showLinks: attrs.showLinks,
+    showKeywords: attrs.showKeywords,
+    showPartners: attrs.showPartners,
     // Mapped relationships
     coordinator,
     team,
-    fundingAgencies,
+    fundingAgencyPartners,
     researchLines,
     publications,
     partners,
@@ -557,11 +776,46 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
 // API Functions - Publications
 // ============================================
 
+export async function getPublicationCategories(): Promise<PublicationCategoryFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PublicationCategoryAttributes>[]>>(
+    'publication-categories',
+    {
+      filters: { isActive: { $eq: true } },
+      sort: ['displayOrder:asc', 'name:asc'],
+    }
+  );
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    color: item.attributes.color || 'bg-slate-500/20 text-slate-400',
+    displayOrder: item.attributes.displayOrder || 0,
+  }));
+}
+
+export async function getProjectStatuses(): Promise<ProjectStatusFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<ProjectStatusAttributes>[]>>(
+    'project-statuses',
+    {
+      filters: { isActive: { $eq: true } },
+      sort: ['displayOrder:asc', 'name:asc'],
+    }
+  );
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    color: item.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    displayOrder: item.attributes.displayOrder || 0,
+    description: item.attributes.description,
+  }));
+}
+
 export async function getPublications(options: FetchOptions = {}): Promise<PublicationFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<PublicationAttributes>[]>>(
     'publications',
     {
-      populate: ['authors', 'researchLines'],
+      populate: ['authors', 'researchLines', 'category'],
       sort: ['year:desc', 'citationCount:desc'],
       ...options,
     }
@@ -601,6 +855,7 @@ export async function getPublicationBySlug(slug: string): Promise<PublicationDet
         researchLine: { populate: ['coverImage'] },
         relatedProject: { populate: ['featuredImage'] },
         relatedNews: { populate: ['coverImage'] },
+        category: true,
         seo: {
           populate: ['ogImage', 'twitterImage'],
         },
@@ -771,12 +1026,39 @@ export async function getFeaturedTools(): Promise<SoftwareToolFlat[]> {
 }
 
 // ============================================
+// API Functions - Partner Types (Dynamic Taxonomy)
+// ============================================
+
+export async function getPartnerTypes(): Promise<PartnerTypeFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<PartnerTypeAttributes>[]>>(
+    'partner-types',
+    {
+      sort: ['displayOrder:asc'],
+      filters: { isActive: { $eq: true } },
+    }
+  );
+
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    sectionTitle: item.attributes.sectionTitle,
+    description: item.attributes.description,
+    displayOrder: item.attributes.displayOrder || 0,
+    color: item.attributes.color || 'text-ufam-primary',
+    statsLabel: item.attributes.statsLabel,
+    isActive: item.attributes.isActive ?? true,
+    showInStats: item.attributes.showInStats ?? false,
+  }));
+}
+
+// ============================================
 // API Functions - Partners
 // ============================================
 
 export async function getPartners(options: FetchOptions = {}): Promise<PartnerFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<PartnerAttributes>[]>>('partners', {
-    populate: ['logo'],
+    populate: ['logo', 'type'],
     sort: ['displayOrder:asc', 'name:asc'],
     filters: { isActive: { $eq: true } },
     ...options,
@@ -794,20 +1076,79 @@ export async function getInternationalPartners(): Promise<PartnerFlat[]> {
 }
 
 // ============================================
-// API Functions - Funding Agencies
+// API Functions - Funding Agency Partners
 // ============================================
 
-export async function getFundingAgencies(options: FetchOptions = {}): Promise<FundingAgencyFlat[]> {
-  const response = await fetchAPI<StrapiResponse<StrapiData<FundingAgencyAttributes>[]>>(
-    'funding-agencies',
+/**
+ * Busca parceiros que são agências de fomento (type.slug === 'funding-agency')
+ */
+export async function getFundingAgencyPartners(options: FetchOptions = {}): Promise<PartnerFlat[]> {
+  return getPartners({
+    filters: {
+      type: { slug: { $eq: 'funding-agency' } },
+      isActive: { $eq: true },
+    },
+    ...options,
+  });
+}
+
+// ============================================
+// API Functions - Degree Levels (Dynamic Taxonomy)
+// ============================================
+
+export async function getDegreeLevels(): Promise<DegreeLevelFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<DegreeLevelAttributes>[]>>(
+    'degree-levels',
     {
-      populate: ['logo'],
-      sort: ['displayOrder:asc', 'name:asc'],
-      filters: { isActive: { $eq: true } },
-      ...options,
+      sort: ['displayOrder:asc'],
     }
   );
-  return response.data.map(flattenFundingAgency);
+
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    slug: item.attributes.slug,
+    pluralName: item.attributes.pluralName,
+    displayOrder: item.attributes.displayOrder || 0,
+  }));
+}
+
+// ============================================
+// API Functions - Alumni Sectors (Dynamic Taxonomy)
+// ============================================
+
+export async function getAlumniSectors(): Promise<AlumniSectorFlat[]> {
+  const response = await fetchAPI<StrapiResponse<StrapiData<AlumniSectorAttributes>[]>>(
+    'alumni-sectors',
+    {
+      sort: ['name:asc'],
+    }
+  );
+
+  return response.data.map((item) => ({
+    id: item.id,
+    name: item.attributes.name,
+    statsLabel: item.attributes.statsLabel,
+    description: item.attributes.description,
+    color: item.attributes.color || 'text-gray-400',
+    iconName: item.attributes.iconName,
+  }));
+}
+
+// ============================================
+// API Functions - Alumni Page Settings
+// ============================================
+
+export async function getAlumniPageSettings(): Promise<AlumniPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{
+      data: { id: number; attributes: AlumniPageSettingAttributes };
+    }>('alumni-page-setting', { populate: 'deep' });
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching alumni page settings:', error);
+    return null;
+  }
 }
 
 // ============================================
@@ -816,25 +1157,73 @@ export async function getFundingAgencies(options: FetchOptions = {}): Promise<Fu
 
 export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat {
   const { id, attributes } = data;
+
+  // Flatten degree - OBRIGATÓRIO (Taxonomia Dinâmica)
+  const degreeData = attributes.degree?.data;
+  const degree = degreeData
+    ? {
+        id: degreeData.id,
+        name: degreeData.attributes.name,
+        slug: degreeData.attributes.slug,
+        pluralName: degreeData.attributes.pluralName,
+        displayOrder: degreeData.attributes.displayOrder || 0,
+      }
+    : {
+        // Fallback para alumni sem degree definido (migração)
+        id: 0,
+        name: attributes.degreeLevel || 'Não informado',
+        slug: 'nao-informado',
+        pluralName: 'Não informado',
+        displayOrder: 999,
+      };
+
+  // Flatten sector - OPCIONAL (pode não ter setor definido)
+  const sectorData = attributes.sector?.data;
+  const sector = sectorData
+    ? {
+        id: sectorData.id,
+        name: sectorData.attributes.name,
+        statsLabel: sectorData.attributes.statsLabel,
+        description: sectorData.attributes.description,
+        color: sectorData.attributes.color || 'text-gray-400',
+        iconName: sectorData.attributes.iconName,
+      }
+    : attributes.currentSector
+      ? {
+          // Fallback para alumni com currentSector antigo mas sem relation
+          id: 0,
+          name: attributes.currentSector,
+          statsLabel: `no setor ${attributes.currentSector.toLowerCase()}`,
+          color: 'text-gray-400',
+        }
+      : undefined;
+
   return {
     id,
     fullName: attributes.fullName,
-    degreeLevel: attributes.degreeLevel,
+    slug: attributes.slug,
+    degreeLevel: degree.name, // Retrocompatibilidade
+    degree,
     thesisTitle: attributes.thesisTitle,
     advisor: attributes.advisor,
     defenseYear: attributes.defenseYear,
     currentPosition: attributes.currentPosition,
     currentInstitution: attributes.currentInstitution,
-    currentSector: attributes.currentSector,
+    researchTopic: attributes.researchTopic,
+    currentSector: sector?.name, // Retrocompatibilidade
+    sector,
     linkedinUrl: attributes.linkedinUrl,
     lattesUrl: attributes.lattesUrl,
+    email: attributes.email,
+    publicationsCount: attributes.publicationsCount,
+    displayOrder: attributes.displayOrder,
     photoUrl: getStrapiMediaUrl(attributes.photo?.data?.attributes?.url),
   };
 }
 
 export async function getAlumni(options: FetchOptions = {}): Promise<AlumnusFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<AlumnusAttributes>[]>>('alumni', {
-    populate: ['photo'],
+    populate: ['photo', 'degree', 'sector'],
     sort: ['defenseYear:desc', 'fullName:asc'],
     ...options,
   });
@@ -960,16 +1349,132 @@ export async function getPeoplePageSettings(): Promise<PeoplePageSettingAttribut
 }
 
 // ============================================
-// Navbar Settings
+// Detailed Page Settings
+// ============================================
+
+export async function getPeopleDetailedPageSettings(): Promise<PeopleDetailedPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: PeopleDetailedPageSetting }>(
+      'people-detailed-page-setting'
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching people detailed page settings:', error);
+    return null;
+  }
+}
+
+export async function getProjectsDetailedPageSettings(): Promise<ProjectsDetailedPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: ProjectsDetailedPageSetting }>(
+      'projects-detailed-page-setting'
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching projects detailed page settings:', error);
+    return null;
+  }
+}
+
+export async function getResearchDetailedPageSettings(): Promise<ResearchDetailedPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: ResearchDetailedPageSetting }>(
+      'research-detailed-page-setting'
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching research detailed page settings:', error);
+    return null;
+  }
+}
+
+// Publications Page Settings
+export async function getPublicationsPageSettings(): Promise<PublicationsPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: PublicationsPageSetting }>(
+      'publications-page-setting',
+      { populate: 'deep' }
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching publications page settings:', error);
+    return null;
+  }
+}
+
+export async function getPublicationsDetailedPageSettings(): Promise<PublicationsDetailedPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: PublicationsDetailedPageSetting }>(
+      'publications-detailed-page-setting'
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching publications detailed page settings:', error);
+    return null;
+  }
+}
+
+// News Page Settings
+export async function getNewsPageSettings(): Promise<NewsPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: NewsPageSetting }>('news-page-setting', {
+      populate: 'deep',
+    });
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching news page settings:', error);
+    return null;
+  }
+}
+
+// Partners Page Settings
+export async function getPartnersPageSettings(): Promise<PartnersPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: PartnersPageSetting }>('partners-page-setting', {
+      populate: 'deep',
+    });
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching partners page settings:', error);
+    return null;
+  }
+}
+
+export async function getNewsDetailedPageSettings(): Promise<NewsDetailedPageSettingAttributes | null> {
+  try {
+    const response = await fetchAPI<{ data: NewsDetailedPageSetting }>(
+      'news-detailed-page-setting'
+    );
+    return response.data?.attributes || null;
+  } catch (error) {
+    console.error('Error fetching news detailed page settings:', error);
+    return null;
+  }
+}
+
 // ============================================
 // Navbar Settings
 // ============================================
 
-export async function getNavbarSettings(): Promise<any> {
+import type {
+  NavbarSettingAttributes,
+  FooterSettingAttributes,
+  LayoutMenuLink,
+  LayoutFooterMenuColumn,
+} from '@/types/strapi';
+
+export async function getNavbarSettings(): Promise<NavbarSettingAttributes | null> {
   try {
-    const response = await fetchAPI<{ data: { id: number; attributes: any } }>('navbar-setting', {
-      populate: '*',
-    });
+    const response = await fetchAPI<{ data: { id: number; attributes: NavbarSettingAttributes } }>(
+      'navbar-setting',
+      {
+        populate: {
+          mainMenu: true,
+          logo: true,
+          ctaButton: true,
+        },
+      }
+    );
     return response.data?.attributes || null;
   } catch (error) {
     console.error('Error fetching navbar settings:', error);
@@ -981,11 +1486,21 @@ export async function getNavbarSettings(): Promise<any> {
 // Footer Settings
 // ============================================
 
-export async function getFooterSettings(): Promise<any> {
+export async function getFooterSettings(): Promise<FooterSettingAttributes | null> {
   try {
-    const response = await fetchAPI<{ data: { id: number; attributes: any } }>('footer-setting', {
-      populate: '*',
-    });
+    const response = await fetchAPI<{ data: { id: number; attributes: FooterSettingAttributes } }>(
+      'footer-setting',
+      {
+        populate: {
+          menuColumns: {
+            populate: ['links'],
+          },
+          socialLinks: true,
+          logo: true,
+          contactInfo: true,
+        },
+      }
+    );
     return response.data?.attributes || null;
   } catch (error) {
     console.error('Error fetching footer settings:', error);

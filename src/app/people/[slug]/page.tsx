@@ -22,11 +22,10 @@ import {
 import {
   getFacultyMemberBySlug,
   getFacultyMembers,
-  getPeoplePageSettings,
+  getPeopleDetailedPageSettings,
   getStrapiMediaUrl,
 } from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
-import { getRoleColors } from '@/styles/utils';
 
 // Social Icons
 function LinkedInIcon({ className }: { className?: string }) {
@@ -80,7 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     seo?.metaDescription ||
     member.shortBio ||
-    `${member.displayName} - ${member.role} no grupo e-Controls da UFAM.`;
+    `${member.displayName} - ${member.memberRole.name} no grupo e-Controls da UFAM.`;
 
   return {
     title,
@@ -130,59 +129,59 @@ export async function generateStaticParams() {
 
 export default async function FacultyMemberPage({ params }: PageProps) {
   const { slug } = await params;
-  const [member, pageSettings] = await Promise.all([
+  const [member, detailSettings] = await Promise.all([
     getFacultyMemberBySlug(slug),
-    getPeoplePageSettings(),
+    getPeopleDetailedPageSettings(),
   ]);
 
   if (!member) {
     notFound();
   }
 
-  const roleColors = getRoleColors(member.role);
-
   // Get labels with comprehensive fallbacks
-  const labels = pageSettings?.detailLabels || {
-    backButtonText: 'voltar para equipe',
-    bioLabel: '/// biografia',
-    bioTitle: 'Sobre',
-    contactsLabel: '/// contatos',
-    contactsTitle: 'Informações de Contato',
-    metricsLabel: '/// métricas',
-    metricsTitle: 'Métricas de Impacto',
-    hIndexTooltip: 'Índice H: mede produtividade e impacto das publicações',
-    citationsLabel: 'Citações',
-    publicationsCountLabel: 'Publicações',
-    educationLabel: '/// formação',
-    educationTitle: 'Formação Acadêmica',
-    researchLinesLabel: '/// atuação',
-    researchLinesTitle: 'Linhas de Pesquisa',
-    projectsLabel: '/// projetos',
-    projectsTitle: 'Projetos de Pesquisa',
-    coordinatedProjectsLabel: 'Coordenados',
-    participatingProjectsLabel: 'Participante',
-    publicationsLabel: '/// publicações',
-    publicationsTitle: 'Produção Científica',
-    publicationsEmptyState: 'Nenhuma publicação cadastrada.',
-    adviseesLabel: '/// orientações',
-    adviseesTitle: 'Orientações',
-    currentAdviseesLabel: 'Em Andamento',
-    completedAdviseesLabel: 'Concluídas',
-    expectedDefenseLabel: 'Defesa prevista',
-    currentPositionLabel: 'Posição atual',
-    teachingLabel: '/// ensino',
-    teachingTitle: 'Disciplinas Ministradas',
-    graduateCoursesLabel: 'Graduação',
-    postgraduateCoursesLabel: 'Pós-Graduação',
-    awardsLabel: '/// prêmios',
-    awardsTitle: 'Prêmios e Distinções',
-    issuerLabel: 'Instituição',
-    institutionalLabel: '/// posições',
-    institutionalTitle: 'Posições Institucionais',
-    collaborationsLabel: '/// colaborações',
-    collaborationsTitle: 'Colaborações Internacionais',
-    viewProfileLabel: 'Ver perfil completo',
-    websiteLabel: 'Website',
+  const labels = {
+    backButtonText: detailSettings?.backButtonText || 'voltar para equipe',
+    bioLabel: detailSettings?.bioLabel || '/// biografia',
+    bioTitle: detailSettings?.bioTitle || 'Sobre',
+    contactsLabel: detailSettings?.contactsLabel || '/// contatos',
+    contactsTitle: detailSettings?.contactsTitle || 'Informações de Contato',
+    metricsLabel: detailSettings?.metricsLabel || '/// métricas',
+    metricsTitle: detailSettings?.metricsTitle || 'Métricas de Impacto',
+    hIndexTooltip:
+      detailSettings?.hIndexTooltip || 'Índice H: mede produtividade e impacto das publicações',
+    citationsLabel: detailSettings?.citationsLabel || 'Citações',
+    publicationsCountLabel: detailSettings?.publicationsCountLabel || 'Publicações',
+    educationLabel: detailSettings?.educationLabel || '/// formação',
+    educationTitle: detailSettings?.educationTitle || 'Formação Acadêmica',
+    researchLinesLabel: detailSettings?.researchLinesLabel || '/// atuação',
+    researchLinesTitle: detailSettings?.researchLinesTitle || 'Linhas de Pesquisa',
+    projectsLabel: detailSettings?.projectsLabel || '/// projetos',
+    projectsTitle: detailSettings?.projectsTitle || 'Projetos de Pesquisa',
+    coordinatedProjectsLabel: detailSettings?.coordinatedProjectsLabel || 'Coordenados',
+    participatingProjectsLabel: detailSettings?.participatingProjectsLabel || 'Participante',
+    publicationsLabel: detailSettings?.publicationsLabel || '/// publicações',
+    publicationsTitle: detailSettings?.publicationsTitle || 'Produção Científica',
+    publicationsEmptyState:
+      detailSettings?.publicationsEmptyState || 'Nenhuma publicação cadastrada.',
+    adviseesLabel: detailSettings?.adviseesLabel || '/// orientações',
+    adviseesTitle: detailSettings?.adviseesTitle || 'Orientações',
+    currentAdviseesLabel: detailSettings?.currentAdviseesLabel || 'Em Andamento',
+    completedAdviseesLabel: detailSettings?.completedAdviseesLabel || 'Concluídas',
+    expectedDefenseLabel: detailSettings?.expectedDefenseLabel || 'Defesa prevista',
+    currentPositionLabel: detailSettings?.currentPositionLabel || 'Posição atual',
+    teachingLabel: detailSettings?.teachingLabel || '/// ensino',
+    teachingTitle: detailSettings?.teachingTitle || 'Disciplinas Ministradas',
+    graduateCoursesLabel: detailSettings?.graduateCoursesLabel || 'Graduação',
+    postgraduateCoursesLabel: detailSettings?.postgraduateCoursesLabel || 'Pós-Graduação',
+    awardsLabel: detailSettings?.awardsLabel || '/// prêmios',
+    awardsTitle: detailSettings?.awardsTitle || 'Prêmios e Distinções',
+    issuerLabel: detailSettings?.issuerLabel || 'Instituição',
+    institutionalLabel: detailSettings?.institutionalLabel || '/// posições',
+    institutionalTitle: detailSettings?.institutionalTitle || 'Posições Institucionais',
+    collaborationsLabel: detailSettings?.collaborationsLabel || '/// colaborações',
+    collaborationsTitle: detailSettings?.collaborationsTitle || 'Colaborações Internacionais',
+    viewProfileLabel: detailSettings?.viewProfileLabel || 'Ver perfil completo',
+    websiteLabel: detailSettings?.websiteLabel || 'Website',
   };
 
   // Helper to check if section should be visible
@@ -233,11 +232,11 @@ export default async function FacultyMemberPage({ params }: PageProps) {
 
             {/* Info */}
             <FadeIn delay={100} className="md:col-span-2">
-              {/* Role Badge */}
+              {/* Role Badge - usando cores dinâmicas da taxonomia */}
               <span
-                className={`inline-block text-white font-tech text-xs px-3 py-1 rounded mb-4 lowercase ${roleColors.bg} ${roleColors.border} border`}
+                className={`inline-block font-tech text-xs px-3 py-1 rounded mb-4 lowercase border ${member.memberRole.color}`}
               >
-                {member.role}
+                {member.memberRole.name}
               </span>
 
               {/* Name */}
@@ -545,9 +544,11 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                         <p className="text-sm text-ufam-secondary line-clamp-2">
                           {project.shortDescription}
                         </p>
-                        {project.status && (
-                          <span className="inline-block mt-3 text-xs text-ufam-primary bg-ufam-primary/10 px-2 py-1 rounded">
-                            {project.status}
+                        {project.projectStatus && (
+                          <span
+                            className={`inline-block mt-3 text-xs px-2 py-1 rounded border ${project.projectStatus.color}`}
+                          >
+                            {project.projectStatus.name}
                           </span>
                         )}
                       </Link>
@@ -579,9 +580,11 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                         <p className="text-sm text-ufam-secondary line-clamp-2">
                           {project.shortDescription}
                         </p>
-                        {project.status && (
-                          <span className="inline-block mt-3 text-xs text-ufam-secondary bg-white/5 px-2 py-1 rounded">
-                            {project.status}
+                        {project.projectStatus && (
+                          <span
+                            className={`inline-block mt-3 text-xs px-2 py-1 rounded border ${project.projectStatus.color}`}
+                          >
+                            {project.projectStatus.name}
                           </span>
                         )}
                       </Link>

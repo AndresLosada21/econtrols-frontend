@@ -110,29 +110,93 @@ export function getFundingAgencyGradient(agency: string | undefined): string {
 
 /**
  * Retorna as cores do badge baseado no tipo de publicação
+ *
+ * TAXONOMIA DINÂMICA: Se o tipo não for encontrado no mapa,
+ * retorna cores padrão (cinza) e usa o próprio tipo como label.
+ * Isso garante que novos tipos adicionados no Strapi funcionem
+ * automaticamente sem precisar editar este arquivo.
  */
-export function getPublicationTypeColors(type: string) {
+export function getPublicationTypeColors(type: string): {
+  bg: string;
+  text: string;
+  label: string;
+} {
   const typeMap: Record<string, { bg: string; text: string; label: string }> = {
+    // Artigos em periódicos
     'Journal Article': { bg: 'bg-state-info-muted', text: 'text-blue-400', label: 'journal' },
+    // Conferências
     'Conference Paper': { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'conference' },
+    // Livros e capítulos
+    Book: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'book' },
     'Book Chapter': { bg: 'bg-state-warning-muted', text: 'text-amber-400', label: 'book chapter' },
+    // Teses
     Thesis: { bg: 'bg-state-success-muted', text: 'text-green-400', label: 'thesis' },
+    'Thesis - PhD': { bg: 'bg-emerald-500/20', text: 'text-emerald-400', label: 'phd thesis' },
+    'Thesis - Masters': { bg: 'bg-teal-500/20', text: 'text-teal-400', label: 'masters thesis' },
+    // Outros
     'Technical Report': { bg: 'bg-gray-500/20', text: 'text-gray-400', label: 'report' },
+    'Software/Tool': { bg: 'bg-cyan-500/20', text: 'text-cyan-400', label: 'software' },
   };
 
-  return typeMap[type] || { bg: 'bg-gray-500/20', text: 'text-gray-400', label: type };
+  // Fallback robusto: retorna cores neutras e o tipo original como label
+  // Isso garante que tipos novos (ex: "Podcast", "Patent") funcionem automaticamente
+  const fallback = {
+    bg: 'bg-slate-500/20',
+    text: 'text-slate-400',
+    label: type.toLowerCase(),
+  };
+
+  return typeMap[type] || fallback;
 }
 
 /**
+ * @deprecated Use memberRole.color from the MemberRole taxonomy instead.
+ * This function is kept for backwards compatibility but should not be used.
+ * The colors are now managed dynamically via the member-role content type in Strapi.
+ *
  * Retorna as cores do badge baseado no role do membro
  */
 export function getRoleColors(role: string) {
+  console.warn(
+    '[DEPRECATED] getRoleColors() is deprecated. Use memberRole.color from the MemberRole taxonomy instead.'
+  );
   const roleMap: Record<string, { bg: string; border: string }> = {
     Líder: { bg: 'bg-ufam-primary/80', border: 'border-ufam-primary' },
     'Co-líder': { bg: 'bg-ufam-secondary/80', border: 'border-ufam-secondary' },
   };
 
   return roleMap[role] || { bg: 'bg-black/50', border: 'border-white/20' };
+}
+
+/**
+ * Retorna as cores do badge baseado na categoria da linha de pesquisa
+ */
+export function getResearchLineCategoryColors(category: string): string {
+  const categoryMap: Record<string, string> = {
+    Principal: 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30',
+    Secundária: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    Secundaria: 'bg-blue-500/20 text-blue-400 border-blue-500/30', // fallback sem acento
+    Emergente: 'bg-green-500/20 text-green-400 border-green-500/30',
+  };
+
+  return categoryMap[category] || 'bg-white/10 text-white border-white/20';
+}
+
+/**
+ * Retorna as cores do badge baseado na categoria da notícia
+ */
+export function getNewsCategoryColors(category: string): string {
+  const categoryMap: Record<string, string> = {
+    Publicacao: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    Publicação: 'bg-blue-500/20 text-blue-400 border-blue-500/30', // com acento
+    Evento: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    Premio: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    Prêmio: 'bg-amber-500/20 text-amber-400 border-amber-500/30', // com acento
+    Projeto: 'bg-green-500/20 text-green-400 border-green-500/30',
+    Parceria: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  };
+
+  return categoryMap[category] || 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
 }
 
 // ============================================

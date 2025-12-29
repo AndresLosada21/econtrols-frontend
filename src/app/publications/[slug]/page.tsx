@@ -11,10 +11,66 @@ import {
   FileText,
   Quote,
   Beaker,
+  GraduationCap,
+  Wrench,
+  File,
+  FolderKanban,
+  Tag,
+  Newspaper,
+  Download,
+  Eye,
 } from 'lucide-react';
-import { getPublicationBySlug, getPublications, getStrapiMediaUrl } from '@/lib/strapi';
+import {
+  getPublicationBySlug,
+  getPublications,
+  getStrapiMediaUrl,
+  getPublicationsDetailedPageSettings,
+} from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
 import { PublicationCitation } from '@/components/ui/PublicationCitation';
+
+// ============================================
+// Icon Map - Fallback estático baseado no category.name
+// Como o banco não possui campo icon ainda, usamos este mapa
+// ============================================
+const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
+  'Journal Article': <BookOpen className="w-4 h-4" />,
+  'Conference Paper': <Users className="w-4 h-4" />,
+  'Book Chapter': <FileText className="w-4 h-4" />,
+  Book: <FileText className="w-4 h-4" />,
+  'Thesis - PhD': <GraduationCap className="w-4 h-4" />,
+  'Thesis - Masters': <GraduationCap className="w-4 h-4" />,
+  Thesis: <GraduationCap className="w-4 h-4" />,
+  'Technical Report': <File className="w-4 h-4" />,
+  'Software/Tool': <Wrench className="w-4 h-4" />,
+};
+
+// Cor padrão de fallback caso a categoria não tenha cor definida no banco
+const DEFAULT_CATEGORY_COLOR = 'bg-slate-500/20 text-slate-400';
+
+/**
+ * Retorna o ícone apropriado para a categoria
+ * Prioriza dados dinâmicos quando disponíveis (futuro suporte a icon no banco)
+ * Usa fallback estático baseado no nome da categoria
+ */
+function getCategoryIcon(categoryName: string | undefined): React.ReactNode {
+  if (!categoryName) return <FileText className="w-4 h-4" />;
+  return CATEGORY_ICON_MAP[categoryName] || <FileText className="w-4 h-4" />;
+}
+
+/**
+ * Retorna as classes de cor para o badge da categoria
+ * Prioriza a cor vinda do banco de dados (taxonomia dinâmica)
+ * Usa fallback padrão se a cor não estiver disponível
+ */
+function getCategoryColor(categoryColor: string | undefined): string {
+  if (categoryColor) {
+    // A cor do banco já vem no formato correto: "bg-blue-500/20 text-blue-400"
+    // Adicionamos border-current para manter consistência visual
+    return `${categoryColor} border-current`;
+  }
+  return `${DEFAULT_CATEGORY_COLOR} border-slate-500/30`;
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -79,47 +135,53 @@ export async function generateStaticParams() {
   }
 }
 
-function getTypeColor(type: string): string {
-  switch (type) {
-    case 'Journal Article':
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    case 'Conference Paper':
-      return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-    case 'Book Chapter':
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-    case 'Thesis':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'Technical Report':
-      return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    default:
-      return 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
-  }
-}
-
-function getTypeIcon(type: string) {
-  switch (type) {
-    case 'Journal Article':
-      return <BookOpen className="w-4 h-4" />;
-    case 'Conference Paper':
-      return <Users className="w-4 h-4" />;
-    case 'Book Chapter':
-      return <FileText className="w-4 h-4" />;
-    case 'Thesis':
-      return <Award className="w-4 h-4" />;
-    default:
-      return <FileText className="w-4 h-4" />;
-  }
-}
-
 export default async function PublicationDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const publication = await getPublicationBySlug(slug);
+
+  const [publication, detailSettings] = await Promise.all([
+    getPublicationBySlug(slug),
+    getPublicationsDetailedPageSettings(),
+  ]);
 
   if (!publication) {
     notFound();
   }
 
-  const typeColor = getTypeColor(publication.publicationType);
+  // Labels com fallback (data-driven do backend)
+  const labels = {
+    backButtonText: detailSettings?.backButtonText || 'voltar para publicações',
+    abstractLabel: detailSettings?.abstractLabel || '/// abstract',
+    abstractTitle: detailSettings?.abstractTitle || 'Resumo',
+    authorsLabel: detailSettings?.authorsLabel || '/// autores',
+    authorsTitle: detailSettings?.authorsTitle || 'Autores',
+    researchLinesLabel: detailSettings?.researchLinesLabel || '/// linha de pesquisa',
+    researchLinesTitle: detailSettings?.researchLinesTitle || 'Linha de Pesquisa',
+    detailsTitle: detailSettings?.detailsTitle || 'Detalhes',
+    awardTitle: detailSettings?.awardTitle || 'Prêmio',
+    citationButtonLabel: detailSettings?.citationButtonLabel || 'Citar',
+    downloadButtonLabel: detailSettings?.downloadButtonLabel || 'Download PDF',
+    relatedTitle: detailSettings?.relatedTitle || 'Leia Também',
+    viewAllText: detailSettings?.viewAllText || 'ver todas as publicações',
+    doiLabel: detailSettings?.doiLabel || 'DOI',
+    // Labels adicionais para novos campos (fallback estático até backend suportar)
+    relatedProjectLabel: '/// projeto relacionado',
+    relatedProjectTitle: 'Projeto Relacionado',
+    keywordsLabel: '/// palavras-chave',
+    keywordsTitle: 'Palavras-chave',
+    relatedNewsLabel: '/// notícias relacionadas',
+    relatedNewsTitle: 'Notícias Relacionadas',
+    metricsLabel: '/// métricas',
+    downloadsLabel: 'Downloads',
+    viewsLabel: 'Visualizações',
+  };
+
+  // Obtém categoria do publication (taxonomia dinâmica)
+  // Prioriza dados do banco de dados (data-driven)
+  const categoryName = publication.category?.name;
+  const categoryColor = publication.category?.color;
+
+  // Cor dinâmica do banco de dados com fallback seguro
+  const badgeColorClasses = getCategoryColor(categoryColor);
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -130,7 +192,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
           className="inline-flex items-center gap-2 text-ufam-secondary hover:text-ufam-primary transition-colors font-tech text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          voltar para publicacoes
+          {labels.backButtonText}
         </Link>
       </div>
 
@@ -138,13 +200,15 @@ export default async function PublicationDetailPage({ params }: PageProps) {
       <section className="py-8 border-b border-white/5">
         <div className="container mx-auto px-6">
           <FadeIn>
-            {/* Type Badge */}
-            <span
-              className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded mb-4 border ${typeColor}`}
-            >
-              {getTypeIcon(publication.publicationType)}
-              {publication.publicationType}
-            </span>
+            {/* Type Badge - Usa taxonomia dinâmica do banco */}
+            {categoryName && (
+              <span
+                className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded mb-4 border ${badgeColorClasses}`}
+              >
+                {getCategoryIcon(categoryName)}
+                {categoryName}
+              </span>
+            )}
 
             {/* Title */}
             <h1 className="text-2xl md:text-3xl font-bold text-white font-tech mb-4 leading-tight">
@@ -199,7 +263,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 <FadeIn>
                   <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
                     <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
-                      {'/// abstract'}
+                      {labels.abstractLabel}
                     </h2>
                     <p className="text-ufam-secondary leading-relaxed">{publication.abstract}</p>
                   </div>
@@ -211,7 +275,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 <FadeIn delay={100}>
                   <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
                     <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
-                      {'/// autores'}
+                      {labels.authorsLabel}
                     </h2>
                     <div className="flex flex-wrap gap-3">
                       {publication.authors.map((author) => (
@@ -249,7 +313,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 <FadeIn delay={200}>
                   <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
                     <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
-                      {'/// linha de pesquisa'}
+                      {labels.researchLinesLabel}
                     </h2>
                     <div className="flex flex-wrap gap-3">
                       <Link
@@ -265,6 +329,100 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                   </div>
                 </FadeIn>
               )}
+
+              {/* Related Project - Dados dinâmicos do banco */}
+              {publication.relatedProject && (
+                <FadeIn delay={250}>
+                  <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
+                    <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
+                      {labels.relatedProjectLabel}
+                    </h2>
+                    <Link
+                      href={`/projects/${publication.relatedProject.slug}`}
+                      className="block p-4 bg-white/5 rounded hover:bg-ufam-primary/10 transition-colors group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <FolderKanban className="w-5 h-5 text-ufam-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-white font-medium group-hover:text-ufam-light transition-colors">
+                            {publication.relatedProject.title}
+                          </h3>
+                          {publication.relatedProject.shortDescription && (
+                            <p className="text-ufam-secondary text-sm mt-1 line-clamp-2">
+                              {publication.relatedProject.shortDescription}
+                            </p>
+                          )}
+                          <span
+                            className={`inline-block mt-2 text-xs font-tech px-2 py-0.5 rounded ${
+                              publication.relatedProject.projectStatus.name === 'Em Andamento'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : publication.relatedProject.projectStatus.name === 'Concluído'
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : 'bg-slate-500/20 text-slate-400'
+                            }`}
+                          >
+                            {publication.relatedProject.projectStatus.name}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                </FadeIn>
+              )}
+
+              {/* Keywords - Dados dinâmicos do banco */}
+              {publication.keywords && publication.keywords.length > 0 && (
+                <FadeIn delay={300}>
+                  <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
+                    <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
+                      {labels.keywordsLabel}
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      {publication.keywords.map((keyword, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded text-sm text-ufam-secondary hover:bg-white/10 transition-colors"
+                        >
+                          <Tag className="w-3 h-3" />
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </FadeIn>
+              )}
+
+              {/* Related News - Dados dinâmicos do banco */}
+              {publication.relatedNews && publication.relatedNews.length > 0 && (
+                <FadeIn delay={350}>
+                  <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
+                    <h2 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
+                      {labels.relatedNewsLabel}
+                    </h2>
+                    <div className="space-y-3">
+                      {publication.relatedNews.map((news) => (
+                        <Link
+                          key={news.id}
+                          href={`/news/${news.slug}`}
+                          className="flex items-start gap-3 p-3 bg-white/5 rounded hover:bg-ufam-primary/10 transition-colors group"
+                        >
+                          <Newspaper className="w-4 h-4 text-ufam-primary mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white text-sm font-medium group-hover:text-ufam-light transition-colors line-clamp-2">
+                              {news.title}
+                            </h4>
+                            {news.publishDate && (
+                              <p className="text-ufam-secondary text-xs mt-1 font-tech">
+                                {new Date(news.publishDate).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </FadeIn>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -272,7 +430,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
               {/* Publication Details */}
               <FadeIn delay={150}>
                 <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
-                  <h3 className="font-tech text-white font-bold mb-4">Detalhes</h3>
+                  <h3 className="font-tech text-white font-bold mb-4">{labels.detailsTitle}</h3>
                   <dl className="space-y-3 text-sm">
                     {publication.volume && (
                       <div>
@@ -320,13 +478,47 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 </div>
               </FadeIn>
 
+              {/* Metrics - Downloads e Views do banco */}
+              {(publication.downloadCount !== undefined && publication.downloadCount > 0) ||
+              (publication.viewCount !== undefined && publication.viewCount > 0) ? (
+                <FadeIn delay={175}>
+                  <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
+                    <h3 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
+                      {labels.metricsLabel}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {publication.downloadCount !== undefined && publication.downloadCount > 0 && (
+                        <div className="text-center p-3 bg-white/5 rounded">
+                          <Download className="w-5 h-5 text-ufam-primary mx-auto mb-1" />
+                          <span className="block text-2xl font-bold text-white font-tech">
+                            {publication.downloadCount}
+                          </span>
+                          <span className="text-xs text-ufam-secondary">
+                            {labels.downloadsLabel}
+                          </span>
+                        </div>
+                      )}
+                      {publication.viewCount !== undefined && publication.viewCount > 0 && (
+                        <div className="text-center p-3 bg-white/5 rounded">
+                          <Eye className="w-5 h-5 text-ufam-primary mx-auto mb-1" />
+                          <span className="block text-2xl font-bold text-white font-tech">
+                            {publication.viewCount}
+                          </span>
+                          <span className="text-xs text-ufam-secondary">{labels.viewsLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </FadeIn>
+              ) : null}
+
               {/* Award */}
               {publication.awardReceived && (
                 <FadeIn delay={200}>
                   <div className="bg-gradient-to-br from-amber-500/20 to-ufam-dark p-6 rounded-lg border border-amber-500/30">
                     <div className="flex items-center gap-2 mb-2">
                       <Award className="w-5 h-5 text-amber-400" />
-                      <h3 className="font-tech text-amber-400 font-bold">Premio</h3>
+                      <h3 className="font-tech text-amber-400 font-bold">{labels.awardTitle}</h3>
                     </div>
                     <p className="text-white">{publication.awardReceived}</p>
                   </div>
@@ -343,7 +535,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                       rel="noopener noreferrer"
                       className="flex items-center justify-between w-full px-4 py-3 bg-ufam-dark border border-white/10 rounded hover:border-ufam-primary/50 hover:bg-ufam-primary/10 transition-all group"
                     >
-                      <span className="text-white font-tech text-sm">DOI</span>
+                      <span className="text-white font-tech text-sm">{labels.doiLabel}</span>
                       <span className="text-ufam-secondary text-xs group-hover:text-ufam-primary transition-colors flex items-center gap-1">
                         {publication.doi}
                         <ExternalLink className="w-3 h-3" />
@@ -364,7 +556,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                       className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-ufam-primary text-white rounded hover:bg-ufam-primary/80 transition-all font-tech text-sm"
                     >
                       <FileText className="w-4 h-4" />
-                      Download PDF
+                      {labels.downloadButtonLabel}
                     </a>
                   )}
                 </div>

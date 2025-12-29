@@ -29,6 +29,17 @@ function getDefaultIcon(title: string): React.ComponentType<{ className?: string
   return Settings;
 }
 
+// Default category for fallback data
+const defaultCategory = {
+  id: 1,
+  name: 'Principal',
+  slug: 'principal',
+  sectionTitle: 'Áreas Principais de Pesquisa',
+  displayOrder: 1,
+  color: 'text-ufam-light',
+  isActive: true,
+};
+
 // Fallback data when Strapi is not available
 const fallbackResearchLines: ResearchLineFlat[] = [
   {
@@ -36,7 +47,7 @@ const fallbackResearchLines: ResearchLineFlat[] = [
     title: 'Teoria de Controle Avançado',
     slug: 'controle-avancado',
     shortDescription: 'Controle robusto, LMI, fault-tolerant control e ocultação de falhas.',
-    category: 'Principal',
+    category: defaultCategory,
     iconName: 'settings',
     isActive: true,
   },
@@ -45,7 +56,7 @@ const fallbackResearchLines: ResearchLineFlat[] = [
     title: 'Detecção e Diagnóstico',
     slug: 'deteccao-diagnostico',
     shortDescription: 'Supervisão de processos industriais e monitoramento em tempo real.',
-    category: 'Principal',
+    category: defaultCategory,
     iconName: 'activity',
     isActive: true,
   },
@@ -54,7 +65,7 @@ const fallbackResearchLines: ResearchLineFlat[] = [
     title: 'Eletrônica de Potência',
     slug: 'eletronica-potencia',
     shortDescription: 'Conversores CC-CC, sistemas fotovoltaicos e cargas de potência constante.',
-    category: 'Principal',
+    category: defaultCategory,
     iconName: 'zap',
     isActive: true,
   },
@@ -63,7 +74,7 @@ const fallbackResearchLines: ResearchLineFlat[] = [
     title: 'Verificação Formal',
     slug: 'verificacao-formal',
     shortDescription: 'Model checking, verificação de redes neurais e ferramenta ESBMC.',
-    category: 'Principal',
+    category: defaultCategory,
     iconName: 'code-2',
     isActive: true,
   },
@@ -72,7 +83,7 @@ const fallbackResearchLines: ResearchLineFlat[] = [
     title: 'Robótica e Indústria 4.0',
     slug: 'robotica-industria',
     shortDescription: 'VANTs, Digital Twins, Asset Administration Shell e IoT Industrial.',
-    category: 'Principal',
+    category: defaultCategory,
     iconName: 'cpu',
     isActive: true,
   },

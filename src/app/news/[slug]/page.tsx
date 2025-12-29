@@ -3,9 +3,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { ArrowLeft, Calendar, User, Tag, ArrowRight } from 'lucide-react';
-import { getNewsItems, getNewsItemBySlug, getStrapiMediaUrl } from '@/lib/strapi';
+import {
+  getNewsItems,
+  getNewsItemBySlug,
+  getStrapiMediaUrl,
+  getNewsDetailedPageSettings,
+} from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
 import { ShareButton } from '@/components/ui/ShareButton';
+import { getNewsCategoryColors } from '@/styles/utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -81,24 +87,26 @@ function formatDate(dateString: string): string {
   });
 }
 
-function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    Publicacao: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Evento: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    Premio: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    Projeto: 'bg-green-500/20 text-green-400 border-green-500/30',
-    Parceria: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-  };
-  return colors[category] || 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
-}
-
 export default async function NewsDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const news = await getNewsItemBySlug(slug);
+
+  const [news, detailSettings] = await Promise.all([
+    getNewsItemBySlug(slug),
+    getNewsDetailedPageSettings(),
+  ]);
 
   if (!news) {
     notFound();
   }
+
+  // Labels com fallback
+  const labels = {
+    backButtonText: detailSettings?.backButtonText || 'voltar para notícias',
+    relatedTitle: detailSettings?.relatedTitle || 'Leia Também',
+    shareTitle: detailSettings?.shareTitle || 'Compartilhar',
+    tagsLabel: detailSettings?.tagsLabel || 'Tags',
+    viewAllText: detailSettings?.viewAllText || 'ver todas as notícias',
+  };
 
   // Get related news (same category, exclude current)
   let relatedNews: Awaited<ReturnType<typeof getNewsItems>> = [];
@@ -109,7 +117,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
     // Ignore errors
   }
 
-  const categoryColor = getCategoryColor(news.category);
+  const categoryColor = getNewsCategoryColors(news.category);
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -120,7 +128,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
           className="inline-flex items-center gap-2 text-ufam-secondary hover:text-ufam-primary transition-colors font-tech text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          voltar para noticias
+          {labels.backButtonText}
         </Link>
       </div>
 
@@ -281,7 +289,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                   href="/news"
                   className="inline-flex items-center gap-2 text-ufam-primary hover:text-ufam-light transition-colors font-tech text-sm"
                 >
-                  ver todas as noticias
+                  {labels.viewAllText}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

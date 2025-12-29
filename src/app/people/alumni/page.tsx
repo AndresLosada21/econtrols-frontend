@@ -1,7 +1,11 @@
-import { getAlumni } from '@/lib/strapi';
-import type { AlumnusFlat } from '@/types/strapi';
+import { getAlumni, getDegreeLevels, getAlumniSectors, getAlumniPageSettings } from '@/lib/strapi';
+import type {
+  AlumnusFlat,
+  DegreeLevelFlat,
+  AlumniSectorFlat,
+  AlumniPageSettingAttributes,
+} from '@/types/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
-import { getSectorColors } from '@/styles/utils';
 import { Linkedin, ExternalLink } from 'lucide-react';
 
 export const metadata = {
@@ -10,27 +14,67 @@ export const metadata = {
 };
 
 export default async function AlumniPage() {
+  // Fetch all data in parallel
   let alumni: AlumnusFlat[] = [];
+  let degreeLevels: DegreeLevelFlat[] = [];
+  let sectors: AlumniSectorFlat[] = [];
+  let pageSettings: AlumniPageSettingAttributes | null = null;
 
   try {
-    alumni = await getAlumni();
+    [alumni, degreeLevels, sectors, pageSettings] = await Promise.all([
+      getAlumni(),
+      getDegreeLevels(),
+      getAlumniSectors(),
+      getAlumniPageSettings(),
+    ]);
   } catch (error) {
-    console.error('Error fetching alumni:', error);
+    console.error('Error fetching alumni data:', error);
   }
 
-  // Group by degree level
-  const doctors = alumni.filter((a) => a.degreeLevel === 'Doutorado');
-  const masters = alumni.filter((a) => a.degreeLevel === 'Mestrado');
-  const postdocs = alumni.filter((a) => a.degreeLevel === 'Pós-Doutorado');
-  const undergrads = alumni.filter((a) => a.degreeLevel === 'Iniciação Científica');
-
-  // Stats
+  // Stats: Total + per sector
   const totalAlumni = alumni.length;
-  const inAcademia = alumni.filter((a) => a.currentSector === 'Academia').length;
-  const inIndustry = alumni.filter((a) => a.currentSector === 'Indústria').length;
+
+  // Calculate stats per sector dynamically
+  const sectorStats = sectors.map((sector) => ({
+    ...sector,
+    count: alumni.filter((a) => a.sector?.id === sector.id).length,
+  }));
+
+  // Calculate stats per degree level dynamically
+  const degreeStats = degreeLevels.map((level) => ({
+    ...level,
+    count: alumni.filter((a) => a.degree?.id === level.id).length,
+  }));
+
+  // Group alumni by degree level
+  const alumniByDegree = degreeLevels
+    .map((level) => ({
+      level,
+      alumni: alumni.filter((a) => a.degree?.id === level.id),
+    }))
+    .filter((group) => group.alumni.length > 0);
+
+  // Helper to get sector color classes
+  const getSectorColorClasses = (color?: string) => {
+    if (!color) return { bg: 'bg-gray-400/10', text: 'text-gray-400' };
+
+    // Map Tailwind text colors to bg variations
+    const colorMap: Record<string, { bg: string; text: string }> = {
+      'text-blue-400': { bg: 'bg-blue-400/10', text: 'text-blue-400' },
+      'text-green-400': { bg: 'bg-green-400/10', text: 'text-green-400' },
+      'text-purple-400': { bg: 'bg-purple-400/10', text: 'text-purple-400' },
+      'text-amber-400': { bg: 'bg-amber-400/10', text: 'text-amber-400' },
+      'text-red-400': { bg: 'bg-red-400/10', text: 'text-red-400' },
+      'text-cyan-400': { bg: 'bg-cyan-400/10', text: 'text-cyan-400' },
+      'text-pink-400': { bg: 'bg-pink-400/10', text: 'text-pink-400' },
+      'text-gray-400': { bg: 'bg-gray-400/10', text: 'text-gray-400' },
+    };
+
+    return colorMap[color] || { bg: 'bg-gray-400/10', text: color };
+  };
 
   const AlumniCard = ({ alum, index }: { alum: AlumnusFlat; index: number }) => {
-    const sectorColors = getSectorColors(alum.currentSector);
+    const sectorColors = getSectorColorClasses(alum.sector?.color);
 
     return (
       <FadeIn delay={index * 50}>
@@ -55,7 +99,7 @@ export default async function AlumniPage() {
                 {alum.fullName}
               </h4>
               <span className="text-xs font-tech text-ufam-primary lowercase">
-                {alum.degreeLevel} {alum.defenseYear && `• ${alum.defenseYear}`}
+                {alum.degree.name} {alum.defenseYear && `• ${alum.defenseYear}`}
               </span>
             </div>
           </div>
@@ -83,11 +127,11 @@ export default async function AlumniPage() {
           )}
 
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-            {alum.currentSector && (
+            {alum.sector && (
               <span
                 className={`text-xs font-tech px-2 py-1 rounded ${sectorColors.bg} ${sectorColors.text}`}
               >
-                {alum.currentSector.toLowerCase()}
+                {alum.sector.name.toLowerCase()}
               </span>
             )}
 
@@ -125,134 +169,93 @@ export default async function AlumniPage() {
       <section className="py-16 border-b border-white/5">
         <div className="container mx-auto px-6">
           <FadeIn>
-            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">Egressos</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white font-tech mb-4">
+              {pageSettings?.pageTitle || 'Egressos'}
+            </h1>
             <p className="text-ufam-secondary max-w-2xl">
-              Nossos egressos atuam em universidades, indústrias e centros de pesquisa ao redor do
-              mundo, contribuindo para o avanço da ciência e tecnologia.
+              {pageSettings?.pageDescription ||
+                'Nossos egressos atuam em universidades, indústrias e centros de pesquisa ao redor do mundo, contribuindo para o avanço da ciência e tecnologia.'}
             </p>
           </FadeIn>
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats - Dynamic from taxonomies */}
       {alumni.length > 0 && (
         <section className="py-8 bg-ufam-dark border-b border-white/5">
           <div className="container mx-auto px-6">
             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+              {/* Total */}
               <FadeIn className="text-center">
                 <span className="text-3xl font-bold text-ufam-primary font-tech">
                   {totalAlumni}
                 </span>
                 <p className="text-xs text-ufam-secondary font-tech lowercase">egressos</p>
               </FadeIn>
-              <FadeIn delay={100} className="text-center">
-                <span className="text-3xl font-bold text-blue-400 font-tech">{inAcademia}</span>
-                <p className="text-xs text-ufam-secondary font-tech lowercase">na academia</p>
-              </FadeIn>
-              <FadeIn delay={200} className="text-center">
-                <span className="text-3xl font-bold text-green-400 font-tech">{inIndustry}</span>
-                <p className="text-xs text-ufam-secondary font-tech lowercase">na indústria</p>
-              </FadeIn>
-              <FadeIn delay={300} className="text-center">
-                <span className="text-3xl font-bold text-ufam-light font-tech">
-                  {doctors.length}
-                </span>
-                <p className="text-xs text-ufam-secondary font-tech lowercase">doutores</p>
-              </FadeIn>
-              <FadeIn delay={400} className="text-center">
-                <span className="text-3xl font-bold text-ufam-light font-tech">
-                  {masters.length}
-                </span>
-                <p className="text-xs text-ufam-secondary font-tech lowercase">mestres</p>
-              </FadeIn>
+
+              {/* Per sector - Dynamic loop */}
+              {sectorStats
+                .filter((s) => s.count > 0)
+                .map((sector, index) => {
+                  const colorClass = sector.color || 'text-gray-400';
+                  return (
+                    <FadeIn key={sector.id} delay={(index + 1) * 100} className="text-center">
+                      <span className={`text-3xl font-bold font-tech ${colorClass}`}>
+                        {sector.count}
+                      </span>
+                      <p className="text-xs text-ufam-secondary font-tech lowercase">
+                        {sector.statsLabel || sector.name.toLowerCase()}
+                      </p>
+                    </FadeIn>
+                  );
+                })}
+
+              {/* Per degree level - Dynamic loop */}
+              {degreeStats
+                .filter((d) => d.count > 0)
+                .map((degree, index) => (
+                  <FadeIn
+                    key={degree.id}
+                    delay={(sectorStats.filter((s) => s.count > 0).length + index + 1) * 100}
+                    className="text-center"
+                  >
+                    <span className="text-3xl font-bold text-ufam-light font-tech">
+                      {degree.count}
+                    </span>
+                    <p className="text-xs text-ufam-secondary font-tech lowercase">
+                      {degree.pluralName?.toLowerCase() || degree.name.toLowerCase()}
+                    </p>
+                  </FadeIn>
+                ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Doctors */}
-      {doctors.length > 0 && (
-        <section className="py-16">
+      {/* Alumni sections - Dynamic loop over degree levels */}
+      {alumniByDegree.map((group, groupIndex) => (
+        <section
+          key={group.level.id}
+          className={`py-16 ${groupIndex % 2 === 1 ? 'bg-ufam-dark' : ''}`}
+        >
           <div className="container mx-auto px-6">
             <FadeIn>
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// doutorado'}
-              </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">Doutores</h3>
-            </FadeIn>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {doctors.map((alum, index) => (
-                <AlumniCard key={alum.id} alum={alum} index={index} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Masters */}
-      {masters.length > 0 && (
-        <section className="py-16 bg-ufam-dark">
-          <div className="container mx-auto px-6">
-            <FadeIn>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// mestrado'}
-              </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">Mestres</h3>
-            </FadeIn>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {masters.map((alum, index) => (
-                <AlumniCard key={alum.id} alum={alum} index={index} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Post-docs */}
-      {postdocs.length > 0 && (
-        <section className="py-16">
-          <div className="container mx-auto px-6">
-            <FadeIn>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// pós-doutorado'}
+                {`/// ${group.level.slug}`}
               </h2>
               <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                Pós-Doutores
+                {group.level.pluralName || group.level.name}
               </h3>
             </FadeIn>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {postdocs.map((alum, index) => (
+              {group.alumni.map((alum, index) => (
                 <AlumniCard key={alum.id} alum={alum} index={index} />
               ))}
             </div>
           </div>
         </section>
-      )}
-
-      {/* Undergrads */}
-      {undergrads.length > 0 && (
-        <section className="py-16 bg-ufam-dark">
-          <div className="container mx-auto px-6">
-            <FadeIn>
-              <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
-                {'/// iniciação científica'}
-              </h2>
-              <h3 className="text-2xl md:text-3xl font-bold text-white font-tech mb-8">
-                Ex-Bolsistas IC
-              </h3>
-            </FadeIn>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {undergrads.map((alum, index) => (
-                <AlumniCard key={alum.id} alum={alum} index={index} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      ))}
 
       {/* Empty State */}
       {alumni.length === 0 && (

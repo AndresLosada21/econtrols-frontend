@@ -3,15 +3,44 @@
 import Link from 'next/link';
 import { ExternalLink, Quote } from 'lucide-react';
 import type { PublicationFlat } from '@/types/strapi';
-import { getPublicationTypeColors } from '@/styles/utils';
 
 interface PublicationCardProps {
   publication: PublicationFlat;
   index?: number;
 }
 
+/**
+ * Parse color classes from database format (e.g., "bg-blue-500/20 text-blue-400")
+ * Returns object with bg and text classes
+ */
+function getCategoryColors(publication: PublicationFlat): {
+  bg: string;
+  text: string;
+  label: string;
+} {
+  // If category exists with color from database, parse it
+  if (publication.category?.color) {
+    const colorString = publication.category.color;
+    const bgMatch = colorString.match(/bg-[^\s]+/);
+    const textMatch = colorString.match(/text-[^\s]+/);
+
+    return {
+      bg: bgMatch ? bgMatch[0] : 'bg-gray-500/20',
+      text: textMatch ? textMatch[0] : 'text-gray-400',
+      label: publication.category.name,
+    };
+  }
+
+  // Fallback if no category
+  return {
+    bg: 'bg-slate-500/20',
+    text: 'text-slate-400',
+    label: 'Publicação',
+  };
+}
+
 export default function PublicationCard({ publication, index = 0 }: PublicationCardProps) {
-  const typeColors = getPublicationTypeColors(publication.publicationType);
+  const typeColors = getCategoryColors(publication);
   const venue = publication.journalName || publication.conferenceName;
 
   return (
