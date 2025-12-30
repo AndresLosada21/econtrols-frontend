@@ -167,7 +167,7 @@ export default async function ProjectsPage() {
   // Use status data from the API if available, otherwise create from project data
   const orderedStatuses =
     allStatuses.length > 0
-      ? allStatuses.filter((s) => projectsByStatus.has(s.name)) // Only show statuses with projects
+      ? allStatuses.filter((s) => s.isActive && projectsByStatus.has(s.name)) // Only show active statuses with projects
       : Array.from(projectsByStatus.keys())
           .map((name) => {
             // Find the status info from a project that has it
@@ -193,25 +193,6 @@ export default async function ProjectsPage() {
   const agenciesTitle = pageSettings?.agenciesTitle || 'Agências de Fomento';
   const emptyStateMessage =
     pageSettings?.emptyStateMessage || 'Conecte ao Strapi para ver os projetos.';
-
-  // Legacy section settings for backwards compatibility
-  const legacySections: Record<string, { label: string; title: string; description: string }> = {
-    'Em Andamento': pageSettings?.activeSection || {
-      label: '/// em andamento',
-      title: 'Projetos Ativos',
-      description: '',
-    },
-    Planejado: pageSettings?.plannedSection || {
-      label: '/// planejados',
-      title: 'Próximos Projetos',
-      description: '',
-    },
-    Concluído: pageSettings?.finishedSection || {
-      label: '/// concluídos',
-      title: 'Projetos Concluídos',
-      description: '',
-    },
-  };
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -267,12 +248,10 @@ export default async function ProjectsPage() {
         const statusProjects = projectsByStatus.get(status.name) || [];
         if (statusProjects.length === 0) return null;
 
-        // Try to get legacy section settings, otherwise generate from status
-        const legacySection = legacySections[status.name];
-        const sectionLabel = legacySection?.label || generateSectionLabel(status.name);
-        const sectionTitle = legacySection?.title || generateSectionTitle(status.name);
-        // Use status.description from DB if available, otherwise legacy description
-        const sectionDescription = status.description || legacySection?.description || '';
+        // Use status fields from DB, with fallbacks
+        const sectionLabel = status.sectionLabel || generateSectionLabel(status.name);
+        const sectionTitle = status.sectionTitle || generateSectionTitle(status.name);
+        const sectionDescription = status.description || '';
 
         return (
           <section key={status.name} className={`py-16 ${getSectionBg(sectionIndex)}`}>
