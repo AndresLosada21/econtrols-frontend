@@ -259,6 +259,9 @@ export function flattenProject(data: StrapiData<ProjectAttributes>): ProjectFlat
           projectStatusData.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
         displayOrder: projectStatusData.attributes.displayOrder || 0,
         description: projectStatusData.attributes.description,
+        sectionLabel: projectStatusData.attributes.sectionLabel,
+        sectionTitle: projectStatusData.attributes.sectionTitle,
+        isActive: projectStatusData.attributes.isActive ?? true,
       }
     : {
         // Fallback para projetos sem status definido
@@ -267,6 +270,10 @@ export function flattenProject(data: StrapiData<ProjectAttributes>): ProjectFlat
         slug: 'sem-status',
         color: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
         displayOrder: 999,
+        description: '',
+        sectionLabel: '',
+        sectionTitle: 'Projetos',
+        isActive: true,
       };
 
   // Flatten relatedPartners e filtra por funding-agency
@@ -808,6 +815,9 @@ export async function getProjectStatuses(): Promise<ProjectStatusFlat[]> {
     color: item.attributes.color || 'bg-gray-500/20 text-gray-400 border-gray-500/30',
     displayOrder: item.attributes.displayOrder || 0,
     description: item.attributes.description,
+    sectionLabel: item.attributes.sectionLabel,
+    sectionTitle: item.attributes.sectionTitle,
+    isActive: item.attributes.isActive ?? true,
   }));
 }
 

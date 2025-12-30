@@ -318,6 +318,8 @@ export interface ProjectStatusAttributes {
   color: string;
   displayOrder: number;
   description?: string;
+  sectionLabel?: string;
+  sectionTitle?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -1157,6 +1159,9 @@ export interface ProjectStatusFlat {
   color: string;
   displayOrder: number;
   description?: string;
+  sectionLabel?: string;
+  sectionTitle?: string;
+  isActive: boolean;
 }
 
 // Member Role Flat (for components)
