@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import {
   ArrowLeft,
@@ -259,98 +260,104 @@ export default async function PublicationDetailPage({ params }: PageProps) {
       {/* Header */}
       <section className="py-8 border-b border-white/5">
         <div className="container mx-auto px-6">
-          <FadeIn>
+          <div className="grid lg:grid-cols-3 gap-12">
             {/* Cover Image - Data-driven do backend */}
             {coverImageUrl && (
-              <div className="mb-6 rounded-lg overflow-hidden max-w-2xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={coverImageUrl}
-                  alt={publication.title}
-                  className="w-full h-auto object-cover"
-                />
-              </div>
+              <FadeIn className="lg:col-span-1">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-ufam-dark border border-white/5">
+                  <Image
+                    src={coverImageUrl}
+                    alt={publication.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+              </FadeIn>
             )}
 
-            {/* Badges Row - Type, Open Access, Featured */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              {/* Type Badge - Usa taxonomia dinâmica do banco */}
-              {categoryName && (
-                <span
-                  className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded border ${badgeColorClasses}`}
-                >
-                  {getCategoryIcon(categoryName)}
-                  {categoryName}
-                </span>
-              )}
+            {/* Info */}
+            <FadeIn delay={100} className={coverImageUrl ? 'lg:col-span-2' : 'lg:col-span-3'}>
+              {/* Badges Row - Type, Open Access, Featured */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {/* Type Badge - Usa taxonomia dinâmica do banco */}
+                {categoryName && (
+                  <span
+                    className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded border ${badgeColorClasses}`}
+                  >
+                    {getCategoryIcon(categoryName)}
+                    {categoryName}
+                  </span>
+                )}
 
-              {/* Open Access Badge - Data-driven */}
-              {publication.isOpenAccess && (
-                <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  <Unlock className="w-3.5 h-3.5" />
-                  {labels.openAccessLabel}
-                </span>
-              )}
+                {/* Open Access Badge - Data-driven */}
+                {publication.isOpenAccess && (
+                  <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                    <Unlock className="w-3.5 h-3.5" />
+                    {labels.openAccessLabel}
+                  </span>
+                )}
 
-              {/* Featured Badge - Data-driven */}
-              {publication.isFeatured && (
-                <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  <Star className="w-3.5 h-3.5" />
-                  {labels.featuredLabel}
-                </span>
-              )}
-            </div>
-
-            {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-bold text-white font-tech mb-4 leading-tight">
-              {publication.title}
-            </h1>
-
-            {/* Authors */}
-            <p className="text-ufam-secondary mb-6">{publication.authorsText}</p>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-sm">
-              {/* Year and Month - Data-driven */}
-              <div className="flex items-center gap-2 text-ufam-secondary">
-                <Calendar className="w-4 h-4 text-ufam-primary" />
-                <span className="font-tech">
-                  {publication.month ? `${formatMonth(publication.month)} ` : ''}
-                  {publication.year}
-                </span>
+                {/* Featured Badge - Data-driven */}
+                {publication.isFeatured && (
+                  <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-amber-500/20 text-amber-400 border-amber-500/30">
+                    <Star className="w-3.5 h-3.5" />
+                    {labels.featuredLabel}
+                  </span>
+                )}
               </div>
 
-              {/* Journal/Conference */}
-              {publication.journalName && (
-                <div className="flex items-center gap-2 text-ufam-secondary">
-                  <BookOpen className="w-4 h-4 text-ufam-primary" />
-                  <span>{publication.journalName}</span>
-                </div>
-              )}
-              {publication.conferenceName && (
-                <div className="flex items-center gap-2 text-ufam-secondary">
-                  <Users className="w-4 h-4 text-ufam-primary" />
-                  <span>{publication.conferenceName}</span>
-                </div>
-              )}
+              {/* Title */}
+              <h1 className="text-2xl md:text-3xl font-bold text-white font-tech mb-4 leading-tight">
+                {publication.title}
+              </h1>
 
-              {/* Book Title - Data-driven para Book Chapters */}
-              {publication.bookTitle && (
-                <div className="flex items-center gap-2 text-ufam-secondary">
-                  <FileText className="w-4 h-4 text-ufam-primary" />
-                  <span>{publication.bookTitle}</span>
-                </div>
-              )}
+              {/* Authors */}
+              <p className="text-ufam-secondary mb-6">{publication.authorsText}</p>
 
-              {/* Citations */}
-              {publication.citationCount && publication.citationCount > 0 && (
+              {/* Meta Info */}
+              <div className="flex flex-wrap items-center gap-6 text-sm">
+                {/* Year and Month - Data-driven */}
                 <div className="flex items-center gap-2 text-ufam-secondary">
-                  <Quote className="w-4 h-4 text-ufam-primary" />
-                  <span className="font-tech">{publication.citationCount} citacoes</span>
+                  <Calendar className="w-4 h-4 text-ufam-primary" />
+                  <span className="font-tech">
+                    {publication.month ? `${formatMonth(publication.month)} ` : ''}
+                    {publication.year}
+                  </span>
                 </div>
-              )}
-            </div>
-          </FadeIn>
+
+                {/* Journal/Conference */}
+                {publication.journalName && (
+                  <div className="flex items-center gap-2 text-ufam-secondary">
+                    <BookOpen className="w-4 h-4 text-ufam-primary" />
+                    <span>{publication.journalName}</span>
+                  </div>
+                )}
+                {publication.conferenceName && (
+                  <div className="flex items-center gap-2 text-ufam-secondary">
+                    <Users className="w-4 h-4 text-ufam-primary" />
+                    <span>{publication.conferenceName}</span>
+                  </div>
+                )}
+
+                {/* Book Title - Data-driven para Book Chapters */}
+                {publication.bookTitle && (
+                  <div className="flex items-center gap-2 text-ufam-secondary">
+                    <FileText className="w-4 h-4 text-ufam-primary" />
+                    <span>{publication.bookTitle}</span>
+                  </div>
+                )}
+
+                {/* Citations */}
+                {publication.citationCount && publication.citationCount > 0 && (
+                  <div className="flex items-center gap-2 text-ufam-secondary">
+                    <Quote className="w-4 h-4 text-ufam-primary" />
+                    <span className="font-tech">{publication.citationCount} citacoes</span>
+                  </div>
+                )}
+              </div>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
