@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { Search, Download, Filter, X, ExternalLink, Linkedin } from 'lucide-react';
 import type { AlumnusFlat } from '@/types/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
-import { getSectorColors } from '@/styles/utils';
 
 interface AlumniListProps {
   alumni: AlumnusFlat[];
@@ -417,8 +416,6 @@ export function AlumniList({ alumni }: AlumniListProps) {
 
 // Alumni Card Component
 function AlumniCard({ alum, index }: { alum: AlumnusFlat; index: number }) {
-  const sectorColors = getSectorColors(alum.currentSector);
-
   return (
     <FadeIn delay={Math.min(index * 30, 300)}>
       <div className="bg-ufam-dark border border-white/5 p-6 rounded hover:border-ufam-primary/30 transition-all group h-full">
@@ -470,11 +467,11 @@ function AlumniCard({ alum, index }: { alum: AlumnusFlat; index: number }) {
         )}
 
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-          {alum.currentSector && (
+          {alum.sector && (
             <span
-              className={`text-xs font-tech px-2 py-1 rounded ${sectorColors.bg} ${sectorColors.text}`}
+              className={`text-xs font-tech px-2 py-1 rounded ${alum.sector.color || 'bg-gray-500/20 text-gray-400'}`}
             >
-              {alum.currentSector.toLowerCase()}
+              {alum.sector.name.toLowerCase()}
             </span>
           )}
 

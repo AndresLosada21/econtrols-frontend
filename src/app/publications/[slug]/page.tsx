@@ -19,6 +19,15 @@ import {
   Newspaper,
   Download,
   Eye,
+  Unlock,
+  Star,
+  Video,
+  Database,
+  Github,
+  Link2,
+  Paperclip,
+  Building2,
+  Hash,
 } from 'lucide-react';
 import {
   getPublicationBySlug,
@@ -173,7 +182,58 @@ export default async function PublicationDetailPage({ params }: PageProps) {
     metricsLabel: '/// métricas',
     downloadsLabel: 'Downloads',
     viewsLabel: 'Visualizações',
+    // Labels para campos adicionais data-driven
+    openAccessLabel: 'Open Access',
+    featuredLabel: 'Destaque',
+    linksLabel: '/// links',
+    externalLinkLabel: 'Link Externo',
+    repositoryLabel: 'Repositório',
+    datasetLabel: 'Dataset',
+    videoLabel: 'Vídeo',
+    supplementaryLabel: '/// materiais suplementares',
+    bookTitleLabel: 'Título do Livro',
+    publisherLabel: 'Editora',
+    issnIsbnLabel: 'ISSN/ISBN',
   };
+
+  // Helper para formatar mês
+  const formatMonth = (month: number | undefined): string => {
+    if (!month) return '';
+    const months = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
+    ];
+    return months[month - 1] || '';
+  };
+
+  // Helper para obter URL do PDF (prioriza pdfFile do Strapi, fallback para pdfUrl)
+  const getPdfDownloadUrl = (): string | null => {
+    if (publication.pdfFile?.data?.attributes?.url) {
+      return getStrapiMediaUrl(publication.pdfFile.data.attributes.url) ?? null;
+    }
+    return publication.pdfUrl || null;
+  };
+
+  // Helper para obter URL da cover image
+  const getCoverImageUrl = (): string | null => {
+    if (publication.coverImage?.data?.attributes?.url) {
+      return getStrapiMediaUrl(publication.coverImage.data.attributes.url) ?? null;
+    }
+    return null;
+  };
+
+  const pdfDownloadUrl = getPdfDownloadUrl();
+  const coverImageUrl = getCoverImageUrl();
 
   // Obtém categoria do publication (taxonomia dinâmica)
   // Prioriza dados do banco de dados (data-driven)
@@ -200,15 +260,46 @@ export default async function PublicationDetailPage({ params }: PageProps) {
       <section className="py-8 border-b border-white/5">
         <div className="container mx-auto px-6">
           <FadeIn>
-            {/* Type Badge - Usa taxonomia dinâmica do banco */}
-            {categoryName && (
-              <span
-                className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded mb-4 border ${badgeColorClasses}`}
-              >
-                {getCategoryIcon(categoryName)}
-                {categoryName}
-              </span>
+            {/* Cover Image - Data-driven do backend */}
+            {coverImageUrl && (
+              <div className="mb-6 rounded-lg overflow-hidden max-w-2xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverImageUrl}
+                  alt={publication.title}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
             )}
+
+            {/* Badges Row - Type, Open Access, Featured */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {/* Type Badge - Usa taxonomia dinâmica do banco */}
+              {categoryName && (
+                <span
+                  className={`inline-flex items-center gap-2 font-tech text-xs px-3 py-1 rounded border ${badgeColorClasses}`}
+                >
+                  {getCategoryIcon(categoryName)}
+                  {categoryName}
+                </span>
+              )}
+
+              {/* Open Access Badge - Data-driven */}
+              {publication.isOpenAccess && (
+                <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  <Unlock className="w-3.5 h-3.5" />
+                  {labels.openAccessLabel}
+                </span>
+              )}
+
+              {/* Featured Badge - Data-driven */}
+              {publication.isFeatured && (
+                <span className="inline-flex items-center gap-1.5 font-tech text-xs px-3 py-1 rounded border bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  <Star className="w-3.5 h-3.5" />
+                  {labels.featuredLabel}
+                </span>
+              )}
+            </div>
 
             {/* Title */}
             <h1 className="text-2xl md:text-3xl font-bold text-white font-tech mb-4 leading-tight">
@@ -220,10 +311,13 @@ export default async function PublicationDetailPage({ params }: PageProps) {
 
             {/* Meta Info */}
             <div className="flex flex-wrap items-center gap-6 text-sm">
-              {/* Year */}
+              {/* Year and Month - Data-driven */}
               <div className="flex items-center gap-2 text-ufam-secondary">
                 <Calendar className="w-4 h-4 text-ufam-primary" />
-                <span className="font-tech">{publication.year}</span>
+                <span className="font-tech">
+                  {publication.month ? `${formatMonth(publication.month)} ` : ''}
+                  {publication.year}
+                </span>
               </div>
 
               {/* Journal/Conference */}
@@ -237,6 +331,14 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-ufam-secondary">
                   <Users className="w-4 h-4 text-ufam-primary" />
                   <span>{publication.conferenceName}</span>
+                </div>
+              )}
+
+              {/* Book Title - Data-driven para Book Chapters */}
+              {publication.bookTitle && (
+                <div className="flex items-center gap-2 text-ufam-secondary">
+                  <FileText className="w-4 h-4 text-ufam-primary" />
+                  <span>{publication.bookTitle}</span>
                 </div>
               )}
 
@@ -450,6 +552,26 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                         <dd className="text-white font-tech">{publication.pages}</dd>
                       </div>
                     )}
+                    {/* Publisher - Data-driven */}
+                    {publication.publisher && (
+                      <div className="flex items-start gap-2">
+                        <Building2 className="w-4 h-4 text-ufam-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <dt className="text-ufam-secondary">{labels.publisherLabel}</dt>
+                          <dd className="text-white font-tech">{publication.publisher}</dd>
+                        </div>
+                      </div>
+                    )}
+                    {/* ISSN/ISBN - Data-driven */}
+                    {publication.issnIsbn && (
+                      <div className="flex items-start gap-2">
+                        <Hash className="w-4 h-4 text-ufam-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <dt className="text-ufam-secondary">{labels.issnIsbnLabel}</dt>
+                          <dd className="text-white font-tech">{publication.issnIsbn}</dd>
+                        </div>
+                      </div>
+                    )}
                     {publication.qualis && (
                       <div>
                         <dt className="text-ufam-secondary">Qualis</dt>
@@ -525,9 +647,10 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 </FadeIn>
               )}
 
-              {/* Links */}
+              {/* Links Section - Data-driven */}
               <FadeIn delay={250}>
                 <div className="space-y-3">
+                  {/* DOI */}
                   {publication.doi && (
                     <a
                       href={`https://doi.org/${publication.doi}`}
@@ -542,25 +665,129 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                       </span>
                     </a>
                   )}
+
+                  {/* External URL - Data-driven */}
+                  {publication.externalUrl && (
+                    <a
+                      href={publication.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between w-full px-4 py-3 bg-ufam-dark border border-white/10 rounded hover:border-ufam-primary/50 hover:bg-ufam-primary/10 transition-all group"
+                    >
+                      <span className="text-white font-tech text-sm flex items-center gap-2">
+                        <Link2 className="w-4 h-4" />
+                        {labels.externalLinkLabel}
+                      </span>
+                      <ExternalLink className="w-4 h-4 text-ufam-secondary group-hover:text-ufam-primary transition-colors" />
+                    </a>
+                  )}
+
+                  {/* Repository URL - Data-driven */}
+                  {publication.repositoryUrl && (
+                    <a
+                      href={publication.repositoryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between w-full px-4 py-3 bg-ufam-dark border border-white/10 rounded hover:border-ufam-primary/50 hover:bg-ufam-primary/10 transition-all group"
+                    >
+                      <span className="text-white font-tech text-sm flex items-center gap-2">
+                        <Github className="w-4 h-4" />
+                        {labels.repositoryLabel}
+                      </span>
+                      <ExternalLink className="w-4 h-4 text-ufam-secondary group-hover:text-ufam-primary transition-colors" />
+                    </a>
+                  )}
+
+                  {/* Dataset URL - Data-driven */}
+                  {publication.datasetUrl && (
+                    <a
+                      href={publication.datasetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between w-full px-4 py-3 bg-ufam-dark border border-white/10 rounded hover:border-ufam-primary/50 hover:bg-ufam-primary/10 transition-all group"
+                    >
+                      <span className="text-white font-tech text-sm flex items-center gap-2">
+                        <Database className="w-4 h-4" />
+                        {labels.datasetLabel}
+                      </span>
+                      <ExternalLink className="w-4 h-4 text-ufam-secondary group-hover:text-ufam-primary transition-colors" />
+                    </a>
+                  )}
+
+                  {/* Video URL - Data-driven */}
+                  {publication.videoUrl && (
+                    <a
+                      href={publication.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between w-full px-4 py-3 bg-ufam-dark border border-white/10 rounded hover:border-ufam-primary/50 hover:bg-ufam-primary/10 transition-all group"
+                    >
+                      <span className="text-white font-tech text-sm flex items-center gap-2">
+                        <Video className="w-4 h-4" />
+                        {labels.videoLabel}
+                      </span>
+                      <ExternalLink className="w-4 h-4 text-ufam-secondary group-hover:text-ufam-primary transition-colors" />
+                    </a>
+                  )}
+
+                  {/* Citation Component */}
                   <PublicationCitation
                     title={publication.title}
                     bibtex={publication.citationBibtex}
                     apa={publication.citationApa}
                     abnt={publication.citationAbnt}
                   />
-                  {publication.pdfUrl && (
+
+                  {/* PDF Download - Prioriza pdfFile do Strapi, fallback para pdfUrl */}
+                  {pdfDownloadUrl && (
                     <a
-                      href={publication.pdfUrl}
+                      href={pdfDownloadUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-ufam-primary text-white rounded hover:bg-ufam-primary/80 transition-all font-tech text-sm"
                     >
-                      <FileText className="w-4 h-4" />
+                      <Download className="w-4 h-4" />
                       {labels.downloadButtonLabel}
                     </a>
                   )}
                 </div>
               </FadeIn>
+
+              {/* Supplementary Materials - Data-driven */}
+              {publication.supplementaryMaterials?.data && (
+                <FadeIn delay={275}>
+                  <div className="bg-ufam-dark p-6 rounded-lg border border-white/5">
+                    <h3 className="font-tech text-ufam-primary text-sm mb-4 tracking-widest lowercase">
+                      {labels.supplementaryLabel}
+                    </h3>
+                    <a
+                      href={
+                        getStrapiMediaUrl(publication.supplementaryMaterials.data.attributes.url) ||
+                        '#'
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-white/5 rounded hover:bg-ufam-primary/10 transition-colors group"
+                    >
+                      <Paperclip className="w-4 h-4 text-ufam-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-white text-sm group-hover:text-ufam-light transition-colors block truncate">
+                          {publication.supplementaryMaterials.data.attributes.name}
+                        </span>
+                        {publication.supplementaryMaterials.data.attributes.size && (
+                          <span className="text-ufam-secondary text-xs font-tech">
+                            {(
+                              publication.supplementaryMaterials.data.attributes.size / 1024
+                            ).toFixed(1)}{' '}
+                            KB
+                          </span>
+                        )}
+                      </div>
+                      <Download className="w-4 h-4 text-ufam-secondary group-hover:text-ufam-primary transition-colors flex-shrink-0" />
+                    </a>
+                  </div>
+                </FadeIn>
+              )}
             </div>
           </div>
         </div>

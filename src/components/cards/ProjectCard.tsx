@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 import type { ProjectFlat } from '@/types/strapi';
-import { getFundingAgencyGradient } from '@/styles/utils';
 
 interface ProjectCardProps {
   project: ProjectFlat;
@@ -53,13 +52,19 @@ function getStatusColorClasses(project: ProjectFlat): {
 }
 
 /**
- * Obtém a agência de fomento do projeto
+ * Obtém a agência de fomento do projeto com colorTheme
  */
-function getFundingAgency(project: ProjectFlat): { name: string; count: number } | null {
+function getFundingAgency(project: ProjectFlat): {
+  name: string;
+  count: number;
+  colorTheme: string;
+} | null {
   if (project.fundingAgencyPartners && project.fundingAgencyPartners.length > 0) {
+    const firstAgency = project.fundingAgencyPartners[0];
     return {
-      name: project.fundingAgencyPartners[0].name,
+      name: firstAgency.name,
       count: project.fundingAgencyPartners.length,
+      colorTheme: firstAgency.colorTheme || 'from-ufam-dark to-black',
     };
   }
 
@@ -68,7 +73,6 @@ function getFundingAgency(project: ProjectFlat): { name: string; count: number }
 
 export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
   const fundingAgency = getFundingAgency(project);
-  const gradient = getFundingAgencyGradient(fundingAgency?.name || '');
   const statusColors = getStatusColorClasses(project);
 
   return (
@@ -91,7 +95,7 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           />
         ) : (
           <div
-            className={`absolute inset-0 bg-gradient-to-br ${gradient} 
+            className={`absolute inset-0 bg-gradient-to-br ${fundingAgency?.colorTheme || 'from-ufam-dark to-black'} 
                         group-hover:scale-110 transition-transform duration-500`}
           />
         )}

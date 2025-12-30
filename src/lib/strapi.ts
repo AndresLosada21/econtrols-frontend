@@ -12,6 +12,7 @@ import type {
   MemberRoleAttributes,
   PartnerTypeAttributes,
   NewsItemAttributes,
+  NewsCategoryAttributes,
   SoftwareToolAttributes,
   PartnerAttributes,
   CollaboratorAttributes,
@@ -59,6 +60,7 @@ import type {
   PartnerTypeFlat,
   NewsItemFlat,
   NewsItemDetail,
+  NewsCategoryFlat,
   SoftwareToolFlat,
   PartnerFlat,
   AlumnusFlat,
@@ -331,12 +333,27 @@ export function flattenPublication(data: StrapiData<PublicationAttributes>): Pub
 
 export function flattenNewsItem(data: StrapiData<NewsItemAttributes>): NewsItemFlat {
   const { id, attributes } = data;
+
+  // Flatten newsCategory
+  let newsCategory: NewsCategoryFlat | undefined;
+  if (attributes.newsCategory?.data) {
+    const cat = attributes.newsCategory.data;
+    newsCategory = {
+      id: cat.id,
+      name: cat.attributes.name,
+      slug: cat.attributes.slug,
+      color: cat.attributes.color,
+      displayOrder: cat.attributes.displayOrder,
+      isActive: cat.attributes.isActive,
+    };
+  }
+
   return {
     id,
     title: attributes.title,
     slug: attributes.slug,
     excerpt: attributes.excerpt || attributes.summary,
-    category: attributes.category,
+    newsCategory,
     publishDate: attributes.publishDate,
     isFeatured: attributes.isFeatured,
     coverImageUrl: getStrapiMediaUrl(attributes.coverImage?.data?.attributes?.url),
@@ -858,16 +875,30 @@ export async function getPublicationBySlug(slug: string): Promise<PublicationDet
     {
       filters: { slug: { $eq: slug } },
       populate: {
+        // Mídias
         coverImage: true,
         pdfFile: true,
         supplementaryMaterials: true,
-        authors: { populate: ['photo'] },
-        researchLine: { populate: ['coverImage'] },
-        relatedProject: { populate: ['featuredImage'] },
-        relatedNews: { populate: ['coverImage'] },
+        // Relacionamentos diretos
         category: true,
         seo: {
           populate: ['ogImage', 'twitterImage'],
+        },
+        // Autores com dados completos (não só photo)
+        authors: {
+          populate: ['photo'], // Mantenha photo, mas pode adicionar mais se necessário
+        },
+        // Linha de pesquisa com imagem
+        researchLine: {
+          populate: ['coverImage'],
+        },
+        // Projeto relacionado com status
+        relatedProject: {
+          populate: ['featuredImage', 'projectStatus'],
+        },
+        // Notícias relacionadas com categoria
+        relatedNews: {
+          populate: ['coverImage', 'newsCategory'],
         },
       },
     }
@@ -934,7 +965,7 @@ export async function getPublicationBySlug(slug: string): Promise<PublicationDet
 
 export async function getNewsItems(options: FetchOptions = {}): Promise<NewsItemFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<NewsItemAttributes>[]>>('news-items', {
-    populate: ['coverImage', 'author', 'tags'],
+    populate: ['coverImage', 'author', 'tags', 'newsCategory'],
     sort: ['publishDate:desc'],
     ...options,
   });
@@ -953,11 +984,12 @@ export async function getNewsItemBySlug(slug: string): Promise<NewsItemDetail | 
     populate: {
       coverImage: true,
       gallery: true,
+      newsCategory: true,
       author: { populate: ['photo'] },
       relatedMembers: { populate: ['photo'] },
       relatedProjects: { populate: ['coverImage'] },
       relatedPublications: true,
-      relatedNews: { populate: ['coverImage'] },
+      relatedNews: { populate: ['coverImage', 'newsCategory'] },
       seo: {
         populate: ['ogImage', 'twitterImage'],
       },
@@ -1434,6 +1466,30 @@ export async function getNewsPageSettings(): Promise<NewsPageSettingAttributes |
   } catch (error) {
     console.error('Error fetching news page settings:', error);
     return null;
+  }
+}
+
+// News Categories
+export async function getNewsCategories(): Promise<NewsCategoryFlat[]> {
+  try {
+    const response = await fetchAPI<StrapiResponse<StrapiData<NewsCategoryAttributes>[]>>(
+      'news-categories',
+      {
+        sort: ['displayOrder:asc'],
+        filters: { isActive: { $eq: true } },
+      }
+    );
+    return response.data.map((item) => ({
+      id: item.id,
+      name: item.attributes.name,
+      slug: item.attributes.slug,
+      color: item.attributes.color,
+      displayOrder: item.attributes.displayOrder,
+      isActive: item.attributes.isActive,
+    }));
+  } catch (error) {
+    console.error('Error fetching news categories:', error);
+    return [];
   }
 }
 

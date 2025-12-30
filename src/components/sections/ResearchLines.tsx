@@ -162,7 +162,10 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   // Use Strapi data if available, otherwise fallback
-  const lines = researchLines?.length ? researchLines : fallbackResearchLines;
+  // NOTE: In production, you should remove fallbackResearchLines and handle empty state gracefully
+  // For now, fallbacks are used only in development or when Strapi is unavailable
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const lines = researchLines?.length ? researchLines : isDevelopment ? fallbackResearchLines : [];
 
   useEffect(() => {
     // Check if mobile
@@ -205,6 +208,22 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
       window.removeEventListener('resize', checkMobile);
     };
   }, []);
+
+  // Empty state for production when no research lines are available
+  if (lines.length === 0) {
+    return (
+      <section id="research" className="py-24 relative bg-ufam-bg z-10">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white font-tech mb-4">
+            Linhas de Pesquisa
+          </h2>
+          <p className="text-ufam-secondary">
+            Conecte ao Strapi para visualizar as linhas de pesquisa.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section ref={sectionRef} id="research" className="h-[300vh] relative bg-ufam-bg z-10">

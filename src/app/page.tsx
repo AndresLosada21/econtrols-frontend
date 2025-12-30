@@ -27,7 +27,7 @@ import FacultyCard from '@/components/cards/FacultyCard';
 import ProjectCard from '@/components/cards/ProjectCard';
 import PublicationCard from '@/components/cards/PublicationCard';
 import { AnimatedCounter } from '@/components/effects/AnimatedCounter';
-import { getSectorColors } from '@/styles/utils';
+// getSectorColors removido - agora usa sector.color do banco
 
 export default async function Home() {
   // Fetch data from Strapi
@@ -299,17 +299,13 @@ export default async function Home() {
                         </p>
                       )}
 
-                      {alum.currentSector &&
-                        (() => {
-                          const sectorColors = getSectorColors(alum.currentSector);
-                          return (
-                            <span
-                              className={`text-xs font-tech px-2 py-1 rounded mt-3 inline-block ${sectorColors.bg} ${sectorColors.text}`}
-                            >
-                              {alum.currentSector.toLowerCase()}
-                            </span>
-                          );
-                        })()}
+                      {alum.sector && (
+                        <span
+                          className={`text-xs font-tech px-2 py-1 rounded mt-3 inline-block ${alum.sector.color || 'bg-gray-500/20 text-gray-400'}`}
+                        >
+                          {alum.sector.name.toLowerCase()}
+                        </span>
+                      )}
                     </div>
                   </FadeIn>
                 ))
@@ -431,16 +427,18 @@ export default async function Home() {
             </div>
 
             {/* Google Scholar Link */}
-            <FadeIn delay={600} className="text-center mt-8">
-              <a
-                href="https://scholar.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-tech text-ufam-secondary hover:text-white border-b border-transparent hover:border-ufam-primary transition-all lowercase"
-              >
-                ver todas no google scholar →
-              </a>
-            </FadeIn>
+            {homepageSettings?.googleScholarUrl && (
+              <FadeIn delay={600} className="text-center mt-8">
+                <a
+                  href={homepageSettings.googleScholarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-tech text-ufam-secondary hover:text-white border-b border-transparent hover:border-ufam-primary transition-all lowercase"
+                >
+                  ver todas no google scholar →
+                </a>
+              </FadeIn>
+            )}
           </div>
         </section>
       )}
@@ -493,7 +491,7 @@ export default async function Home() {
                       <div className="p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xs font-tech text-ufam-primary lowercase">
-                            {item.category}
+                            {item.newsCategory?.name || 'Geral'}
                           </span>
                           <span className="text-xs text-ufam-secondary">
                             {item.publishDate &&

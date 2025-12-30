@@ -11,7 +11,7 @@ import {
 } from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
 import { ShareButton } from '@/components/ui/ShareButton';
-import { getNewsCategoryColors } from '@/styles/utils';
+// getNewsCategoryColors removido - agora usa newsCategory.color do banco
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -117,7 +117,9 @@ export default async function NewsDetailPage({ params }: PageProps) {
     // Ignore errors
   }
 
-  const categoryColor = getNewsCategoryColors(news.category);
+  const categoryColor =
+    news.newsCategory?.color || 'bg-ufam-primary/20 text-ufam-primary border-ufam-primary/30';
+  const categoryName = news.newsCategory?.name || 'Geral';
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -142,7 +144,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               <span
                 className={`inline-block font-tech text-xs px-3 py-1 rounded mb-4 border ${categoryColor}`}
               >
-                {news.category}
+                {categoryName}
               </span>
 
               {/* Title */}
@@ -267,7 +269,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                     )}
                     <div className="p-4">
                       <span className="text-xs font-tech text-ufam-primary lowercase mb-2 block">
-                        {item.category}
+                        {item.newsCategory?.name || 'Geral'}
                       </span>
                       <h4 className="font-tech font-bold text-white group-hover:text-ufam-light transition-colors line-clamp-2">
                         {item.title}

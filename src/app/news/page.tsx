@@ -63,7 +63,7 @@ export default async function NewsPage() {
   };
 
   // Get unique categories
-  const categories = [...new Set(news.map((n) => n.category).filter(Boolean))];
+  const categories = [...new Set(news.map((n) => n.newsCategory?.name).filter(Boolean))];
 
   // Featured news (first 2)
   const featuredNews = news.filter((n) => n.isFeatured).slice(0, 2);
@@ -134,7 +134,7 @@ export default async function NewsPage() {
                     <div className="p-6">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-xs font-tech text-ufam-primary lowercase px-2 py-1 bg-ufam-primary/10 rounded">
-                          {item.category}
+                          {item.newsCategory?.name || 'Geral'}
                         </span>
                         <span className="text-xs text-ufam-secondary flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -190,7 +190,7 @@ export default async function NewsPage() {
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-tech text-ufam-primary lowercase">
-                          {item.category}
+                          {item.newsCategory?.name || 'Geral'}
                         </span>
                         <span className="text-xs text-ufam-secondary">
                           {item.publishDate &&

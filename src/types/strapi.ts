@@ -38,6 +38,9 @@ export interface StrapiMedia {
         large?: StrapiImageFormat;
       };
       url: string;
+      ext?: string;
+      mime?: string;
+      size?: number;
     };
   } | null;
 }
@@ -344,6 +347,20 @@ export interface MemberRoleAttributes {
 
 export interface MemberRole extends StrapiData<MemberRoleAttributes> {}
 
+// News Category (Dynamic Taxonomy)
+export interface NewsCategoryAttributes {
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  isActive: boolean;
+  newsItems?: StrapiResponse<StrapiData<NewsItemAttributes>[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewsCategory extends StrapiData<NewsCategoryAttributes> {}
+
 // News Item
 export interface NewsItemAttributes {
   title: string;
@@ -351,7 +368,7 @@ export interface NewsItemAttributes {
   excerpt?: string;
   summary?: string;
   content: string;
-  category: string;
+  newsCategory?: StrapiResponse<StrapiData<NewsCategoryAttributes>>;
   publishDate: string;
   isFeatured: boolean;
   isPublished?: boolean;
@@ -432,6 +449,7 @@ export interface PartnerAttributes {
   collaborationType?: string;
   websiteUrl?: string;
   supportType?: string[];
+  colorTheme?: string;
   isActive: boolean;
   displayOrder?: number;
   logo?: StrapiMedia;
@@ -819,6 +837,7 @@ export interface PublicationsPageSettingAttributes {
   conferencesTabLabel: string;
   chaptersTabLabel: string;
   thesesTabLabel: string;
+  googleScholarUrl?: string;
   seo?: SharedSeo;
   createdAt: string;
   updatedAt: string;
@@ -955,6 +974,7 @@ export interface HomepageSettingAttributes {
   mainContactEmail?: string;
   phone?: string;
   address?: string;
+  googleScholarUrl?: string;
   socialLinks?: {
     linkedin?: string;
     github?: string;
@@ -1232,12 +1252,23 @@ export interface PublicationDetail extends PublicationFlat {
   seo?: SharedSeo;
 }
 
+// News Category Flat (for components)
+export interface NewsCategoryFlat {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 export interface NewsItemFlat {
   id: number;
   title: string;
   slug: string;
   excerpt?: string;
-  category: string;
+  /** Dynamic category from Strapi - taxonomia dinâmica */
+  newsCategory?: NewsCategoryFlat;
   publishDate: string;
   isFeatured: boolean;
   coverImageUrl?: string;
@@ -1282,6 +1313,7 @@ export interface PartnerFlat {
   country: string;
   city?: string;
   websiteUrl?: string;
+  colorTheme?: string;
   isActive: boolean;
   logoUrl?: string;
 }

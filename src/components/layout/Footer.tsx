@@ -51,6 +51,9 @@ interface FooterProps {
   copyrightText?: string;
   bottomText?: string;
   menuColumns?: MenuColumn[];
+  showNewsletter?: boolean;
+  newsletterTitle?: string;
+  newsletterDescription?: string;
 }
 
 // Colunas padrão (fallback caso não venha do Strapi)
@@ -86,6 +89,9 @@ export default function Footer({
   copyrightText = 'e-Controls Research Group. Todos os direitos reservados.',
   bottomText = 'Desenvolvido com ❤️ na Amazônia.',
   menuColumns = defaultMenuColumns,
+  showNewsletter = false,
+  newsletterTitle,
+  newsletterDescription,
 }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
@@ -187,6 +193,35 @@ export default function Footer({
             ))}
           </div>
         </div>
+
+        {/* Newsletter Section */}
+        {showNewsletter && (
+          <div className="mt-12 pt-8 border-t border-white/5">
+            <div className="max-w-md mx-auto text-center">
+              <h3 className="text-white font-bold mb-4 font-tech lowercase">
+                {newsletterTitle || 'Newsletter'}
+              </h3>
+              <p className="text-ufam-secondary text-sm mb-6">
+                {newsletterDescription ||
+                  'Assine nossa newsletter para receber as últimas atualizações.'}
+              </p>
+              <form className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Seu e-mail"
+                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-ufam-secondary focus:outline-none focus:border-ufam-primary"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-ufam-primary text-white rounded font-tech lowercase hover:bg-ufam-primary/80 transition-colors"
+                >
+                  Assinar
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Copyright */}
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-ufam-secondary font-tech">

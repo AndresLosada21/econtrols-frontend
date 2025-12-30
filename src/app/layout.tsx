@@ -153,6 +153,9 @@ export default async function RootLayout({
           copyrightText={footerSettings?.copyrightText}
           bottomText={footerSettings?.bottomText}
           menuColumns={footerMenuColumns}
+          showNewsletter={footerSettings?.showNewsletter}
+          newsletterTitle={footerSettings?.newsletterTitle}
+          newsletterDescription={footerSettings?.newsletterDescription}
         />
       </body>
     </html>
