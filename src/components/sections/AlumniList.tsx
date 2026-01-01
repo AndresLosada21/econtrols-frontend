@@ -61,12 +61,16 @@ export function AlumniList({ alumni }: AlumniListProps) {
       }
 
       // Degree filter
-      if (selectedDegree !== 'Todos' && alum.degreeLevel !== selectedDegree) {
+      // Fallback to legacy field if relation is missing (during migration)
+      const degreeName = alum.degree?.name;
+      if (selectedDegree !== 'Todos' && degreeName !== selectedDegree) {
         return false;
       }
 
       // Sector filter
-      if (selectedSector !== 'Todos' && alum.currentSector !== selectedSector) {
+      // Fallback to legacy field if relation is missing (during migration)
+      const sectorName = alum.sector?.name;
+      if (selectedSector !== 'Todos' && sectorName !== selectedSector) {
         return false;
       }
 
@@ -81,10 +85,16 @@ export function AlumniList({ alumni }: AlumniListProps) {
 
   // Stats
   const stats = useMemo(() => {
-    const inAcademia = filteredAlumni.filter((a) => a.currentSector === 'Academia').length;
-    const inIndustry = filteredAlumni.filter((a) => a.currentSector === 'Indústria').length;
-    const doctors = filteredAlumni.filter((a) => a.degreeLevel === 'Doutorado').length;
-    const masters = filteredAlumni.filter((a) => a.degreeLevel === 'Mestrado').length;
+    // Helper to check sector safely
+    const checkSector = (a: AlumnusFlat, sector: string) => a.sector?.name === sector;
+
+    // Helper to check degree safely
+    const checkDegree = (a: AlumnusFlat, degree: string) => a.degree?.name === degree;
+
+    const inAcademia = filteredAlumni.filter((a) => checkSector(a, 'Academia')).length;
+    const inIndustry = filteredAlumni.filter((a) => checkSector(a, 'Indústria')).length;
+    const doctors = filteredAlumni.filter((a) => checkDegree(a, 'Doutorado')).length;
+    const masters = filteredAlumni.filter((a) => checkDegree(a, 'Mestrado')).length;
     return { inAcademia, inIndustry, doctors, masters, total: filteredAlumni.length };
   }, [filteredAlumni]);
 
@@ -105,13 +115,13 @@ export function AlumniList({ alumni }: AlumniListProps) {
 
     const rows = filteredAlumni.map((alum) => [
       alum.fullName,
-      alum.degreeLevel,
+      alum.degree?.name || '',
       alum.defenseYear?.toString() || '',
       alum.thesisTitle || '',
       alum.advisor || '',
       alum.currentPosition || '',
       alum.currentInstitution || '',
-      alum.currentSector || '',
+      alum.sector?.name || '',
       alum.linkedinUrl || '',
       alum.lattesUrl || '',
     ]);
@@ -378,7 +388,7 @@ export function AlumniList({ alumni }: AlumniListProps) {
                   <div>
                     <h4 className="text-white font-tech font-bold">Governo</h4>
                     <p className="text-xs text-purple-400 font-tech">
-                      {alumni.filter((a) => a.currentSector === 'Governo').length} egressos
+                      {alumni.filter((a) => a.sector?.name === 'Governo').length} egressos
                     </p>
                   </div>
                 </div>
@@ -398,7 +408,7 @@ export function AlumniList({ alumni }: AlumniListProps) {
                   <div>
                     <h4 className="text-white font-tech font-bold">Empreendedorismo</h4>
                     <p className="text-xs text-amber-400 font-tech">
-                      {alumni.filter((a) => a.currentSector === 'Empreendedorismo').length} egressos
+                      {alumni.filter((a) => a.sector?.name === 'Empreendedorismo').length} egressos
                     </p>
                   </div>
                 </div>
@@ -439,7 +449,7 @@ function AlumniCard({ alum, index }: { alum: AlumnusFlat; index: number }) {
               {alum.fullName}
             </h4>
             <span className="text-xs font-tech text-ufam-primary lowercase">
-              {alum.degreeLevel} {alum.defenseYear && `• ${alum.defenseYear}`}
+              {alum.degree?.name} {alum.defenseYear && `• ${alum.defenseYear}`}
             </span>
           </div>
         </div>

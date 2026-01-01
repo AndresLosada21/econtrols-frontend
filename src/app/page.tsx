@@ -72,6 +72,9 @@ export default async function Home() {
           groupName={homepageSettings?.groupName}
           tagline={homepageSettings?.tagline}
           institutionalAffiliation={homepageSettings?.institutionalAffiliation}
+          department={homepageSettings?.department}
+          location={homepageSettings?.location}
+          foundingYear={homepageSettings?.foundingYear}
           backgroundImageUrl={
             homepageSettings?.heroBackground?.data?.attributes?.url
               ? `${process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'}${homepageSettings.heroBackground.data.attributes.url}`

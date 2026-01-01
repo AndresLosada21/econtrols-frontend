@@ -9,6 +9,9 @@ interface HeroProps {
   groupName?: string;
   tagline?: string;
   institutionalAffiliation?: string;
+  department?: string;
+  location?: string;
+  foundingYear?: string;
   backgroundImageUrl?: string;
 }
 
@@ -16,6 +19,9 @@ export default function Hero({
   groupName = 'e-Controls',
   tagline = 'Excelência em Controle de Sistemas na Amazônia',
   institutionalAffiliation = 'Universidade Federal do Amazonas',
+  department,
+  location,
+  foundingYear,
   backgroundImageUrl,
 }: HeroProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -46,8 +52,9 @@ export default function Hero({
 
       {/* Content */}
       <div className="container mx-auto px-6 relative z-10 text-center">
-        {/* University tag */}
-        <div className="inline-block mb-6 overflow-hidden">
+        {/* University tag & Metadata */}
+        <div className="flex flex-col items-center gap-2 mb-6 overflow-hidden">
+          {/* Institutional Affiliation */}
           <p
             className={`font-tech text-ufam-light text-sm md:text-base tracking-[0.2em] transition-transform duration-700 lowercase ${
               isLoaded ? 'translate-y-0' : 'translate-y-10'
@@ -56,6 +63,23 @@ export default function Hero({
           >
             :: {institutionalAffiliation.toLowerCase()} ::
           </p>
+
+          {/* Department & Location */}
+          {(department || location) && (
+            <div
+              className={`flex items-center gap-3 text-xs md:text-sm font-tech text-ufam-secondary transition-all duration-700 ${
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}
+              style={{ transitionDelay: '150ms' }}
+            >
+              {department && (
+                <span className="px-3 py-1 border border-ufam-primary/30 rounded-full bg-ufam-primary/10 backdrop-blur-sm">
+                  {department}
+                </span>
+              )}
+              {location && <span className="text-ufam-secondary/70">{location}</span>}
+            </div>
+          )}
         </div>
 
         {/* Main title */}
@@ -115,6 +139,24 @@ export default function Hero({
             ver publicações
           </Link>
         </div>
+        {/* Founding Year Badge (Optional) */}
+        {foundingYear && (
+          <div
+            className={`absolute bottom-8 right-6 hidden md:block transition-all duration-700 ${
+              isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
+            }`}
+            style={{ transitionDelay: '1000ms' }}
+          >
+            <div className="text-right">
+              <span className="block text-xs font-tech text-ufam-secondary uppercase tracking-widest mb-1">
+                Desde
+              </span>
+              <span className="text-4xl font-black font-tech text-ufam-primary/20">
+                {foundingYear}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scroll indicator */}

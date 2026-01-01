@@ -78,6 +78,51 @@ export interface StrapiImageFormat {
 }
 
 // ============================================
+// Component Interfaces
+// ============================================
+
+export interface AcademicFormation {
+  id: number;
+  degree:
+    | 'Graduação'
+    | 'Especialização'
+    | 'Mestrado'
+    | 'Doutorado'
+    | 'Pós-Doutorado'
+    | 'Livre-Docência';
+  field: string;
+  institution: string;
+  year: number;
+  details?: string;
+}
+
+export interface AwardDistinction {
+  id: number;
+  title: string;
+  event?: string;
+  year: number;
+  description?: string;
+}
+
+export interface Advisee {
+  id: number;
+  name: string;
+  level: 'Doutorado' | 'Mestrado' | 'Iniciação Científica' | 'TCC';
+  topic?: string;
+  title?: string;
+  startYear?: number;
+  year?: number;
+  status: 'Em andamento' | 'Concluído';
+}
+
+export interface Collaboration {
+  id: number;
+  institutionName: string;
+  country?: string;
+  collaborationType?: 'Co-development' | 'Funding' | 'Testing' | 'Support';
+}
+
+// ============================================
 // Content Type Interfaces
 // ============================================
 
@@ -126,10 +171,10 @@ export interface FacultyMemberAttributes {
   showAcademicLinks?: boolean;
   showSpecializations?: boolean;
   // Componentes
-  academicFormation?: any[];
-  awardsDistinctions?: any[];
-  currentGraduateAdvisees?: any[];
-  completedAdvisees?: any[];
+  academicFormation?: AcademicFormation[];
+  awardsDistinctions?: AwardDistinction[];
+  currentGraduateAdvisees?: Advisee[];
+  completedAdvisees?: Advisee[];
   // Relações
   photo?: StrapiMedia;
   memberRole?: StrapiResponse<StrapiData<MemberRoleAttributes>>;
@@ -167,8 +212,6 @@ export interface ResearchLineAttributes {
   slug: string;
   shortDescription: string;
   fullDescription?: string;
-  /** @deprecated Use `category` relation instead */
-  // category: 'Principal' | 'Secundária' | 'Emergente'; // Removido - agora é relação
   category?: StrapiResponse<StrapiData<ResearchCategoryAttributes>>;
   icon?: string;
   iconName?: string; // Nome do ícone Lucide como fallback (ex: "settings", "cpu")
@@ -439,8 +482,6 @@ export interface PartnerType extends StrapiData<PartnerTypeAttributes> {}
 // Partner
 export interface PartnerAttributes {
   name: string;
-  /** @deprecated Use `type` relation instead */
-  partnerType?: string;
   type?: StrapiResponse<StrapiData<PartnerTypeAttributes>>;
   country: string;
   state?: string;
@@ -520,8 +561,6 @@ export interface AlumniPageSetting {
 export interface AlumnusAttributes {
   fullName: string;
   slug?: string;
-  /** @deprecated Use `degree` relation instead */
-  degreeLevel?: 'Mestrado' | 'Doutorado' | 'Pós-Doutorado' | 'Iniciação Científica';
   degree?: StrapiResponse<StrapiData<DegreeLevelAttributes>>;
   thesisTitle?: string;
   advisor?: string;
@@ -529,8 +568,6 @@ export interface AlumnusAttributes {
   currentPosition?: string;
   currentInstitution?: string;
   researchTopic?: string;
-  /** @deprecated Use `sector` relation instead */
-  currentSector?: 'Academia' | 'Indústria' | 'Governo' | 'Empreendedorismo';
   sector?: StrapiResponse<StrapiData<AlumniSectorAttributes>>;
   linkedinUrl?: string;
   lattesUrl?: string;
@@ -1023,23 +1060,23 @@ export interface FacultyMemberFlat {
   researchLines?: ResearchLineFlat[];
   publications?: PublicationFlat[];
   projects?: ProjectFlat[];
-  education?: any[];
+  education?: AcademicFormation[];
   experience?: any[];
   skills?: string[];
   teaching?: any[];
-  awards?: any[];
-  collaborations?: any[];
-  supervisions?: any[];
+  awards?: AwardDistinction[];
+  collaborations?: Collaboration[];
+  supervisions?: Advisee[];
 }
 
 export interface FacultyMemberDetail extends FacultyMemberFlat {
   // Campos adicionais para detalhes
   slug: string;
   biography?: string;
-  academicFormation?: any[];
-  awardsDistinctions?: any[];
-  currentGraduateAdvisees?: any[];
-  completedAdvisees?: any[];
+  academicFormation?: AcademicFormation[];
+  awardsDistinctions?: AwardDistinction[];
+  currentGraduateAdvisees?: Advisee[];
+  completedAdvisees?: Advisee[];
   teachingGraduate?: string[];
   teachingPostgraduate?: string[];
   researchGateUrl?: string;
@@ -1306,8 +1343,6 @@ export interface SoftwareToolFlat {
 export interface PartnerFlat {
   id: number;
   name: string;
-  /** @deprecated Use `type` object instead */
-  partnerType?: string;
   /** Dynamic type from Strapi - taxonomia dinâmica */
   type: PartnerTypeFlat;
   country: string;
@@ -1355,8 +1390,6 @@ export interface AlumnusFlat {
   id: number;
   fullName: string;
   slug?: string;
-  /** @deprecated Use `degree` object instead */
-  degreeLevel?: string;
   /** Dynamic degree from Strapi - taxonomia dinâmica */
   degree: DegreeLevelFlat;
   thesisTitle?: string;
@@ -1365,8 +1398,6 @@ export interface AlumnusFlat {
   currentPosition?: string;
   currentInstitution?: string;
   researchTopic?: string;
-  /** @deprecated Use `sector` object instead */
-  currentSector?: string;
   /** Dynamic sector from Strapi - taxonomia dinâmica */
   sector?: AlumniSectorFlat;
   linkedinUrl?: string;

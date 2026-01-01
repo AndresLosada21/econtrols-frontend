@@ -446,7 +446,7 @@ export default async function FacultyMemberPage({ params }: PageProps) {
             </FadeIn>
 
             <div className="space-y-6">
-              {member.academicFormation?.map((edu: any, index: number) => (
+              {member.academicFormation?.map((edu, index) => (
                 <FadeIn key={index} delay={index * 100}>
                   <div className="bg-ufam-bg p-6 rounded border border-white/5">
                     <div className="flex items-start gap-4">
@@ -456,7 +456,8 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                         <p className="text-ufam-secondary mb-2">{edu.institution}</p>
                         <div className="flex items-center gap-4 text-xs text-ufam-secondary">
                           {edu.year && <span className="text-ufam-primary">{edu.year}</span>}
-                          {edu.location && <span>{edu.location}</span>}
+                          {edu.field && <span>{edu.field}</span>}
+                          {edu.details && <span>{edu.details}</span>}
                         </div>
                       </div>
                     </div>
@@ -485,7 +486,7 @@ export default async function FacultyMemberPage({ params }: PageProps) {
             </FadeIn>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {member.researchLines?.map((line: any, index: number) => (
+              {member.researchLines?.map((line, index) => (
                 <FadeIn key={line.id} delay={index * 100}>
                   <Link
                     href={`/research/${line.slug}`}
@@ -532,7 +533,7 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                   </h4>
                 </FadeIn>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {member.coordinatedProjects.map((project: any, index: number) => (
+                  {member.coordinatedProjects.map((project, index) => (
                     <FadeIn key={project.id} delay={index * 100}>
                       <Link
                         href={`/projects/${project.slug}`}
@@ -568,7 +569,7 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                   </h4>
                 </FadeIn>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {member.participatingProjects.map((project: any, index: number) => (
+                  {member.participatingProjects.map((project, index) => (
                     <FadeIn key={project.id} delay={index * 100}>
                       <Link
                         href={`/projects/${project.slug}`}
@@ -616,7 +617,7 @@ export default async function FacultyMemberPage({ params }: PageProps) {
             {member.publications && member.publications.length > 0 ? (
               <>
                 <div className="space-y-4">
-                  {member.publications.slice(0, 10).map((pub: any, index: number) => (
+                  {member.publications.slice(0, 10).map((pub, index) => (
                     <FadeIn key={pub.id} delay={index * 50}>
                       <Link
                         href={`/publications/${pub.slug}`}
@@ -699,16 +700,18 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                   </h4>
                 </FadeIn>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {member.currentGraduateAdvisees.map((advisee: any, index: number) => (
+                  {member.currentGraduateAdvisees.map((advisee, index) => (
                     <FadeIn key={index} delay={index * 100}>
                       <div className="bg-ufam-bg p-6 rounded border border-white/5">
-                        <h5 className="text-white font-bold mb-1">{advisee.studentName}</h5>
-                        <p className="text-sm text-ufam-secondary mb-3">{advisee.thesisTitle}</p>
+                        <h5 className="text-white font-bold mb-1">{advisee.name}</h5>
+                        <p className="text-sm text-ufam-secondary mb-3">
+                          {advisee.topic || 'Sem tema definido'}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-ufam-secondary">
                           <span className="text-ufam-primary">{advisee.level}</span>
-                          {advisee.expectedDefense && (
+                          {advisee.year && (
                             <span>
-                              {labels.expectedDefenseLabel}: {advisee.expectedDefense}
+                              {labels.expectedDefenseLabel}: {advisee.year}
                             </span>
                           )}
                         </div>
@@ -729,24 +732,18 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                   </h4>
                 </FadeIn>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {member.completedAdvisees.map((advisee: any, index: number) => (
+                  {member.completedAdvisees.map((advisee, index) => (
                     <FadeIn key={index} delay={index * 100}>
                       <div className="bg-ufam-bg p-6 rounded border border-white/5">
-                        <h5 className="text-white font-bold mb-1">{advisee.studentName}</h5>
-                        <p className="text-sm text-ufam-secondary mb-3">{advisee.thesisTitle}</p>
+                        <h5 className="text-white font-bold mb-1">{advisee.name}</h5>
+                        <p className="text-sm text-ufam-secondary mb-3">
+                          {advisee.title || 'Sem título'}
+                        </p>
                         <div className="flex flex-col gap-2 text-xs text-ufam-secondary">
                           <div className="flex items-center gap-4">
                             <span className="text-ufam-primary">{advisee.level}</span>
-                            {advisee.defenseYear && <span>{advisee.defenseYear}</span>}
+                            {advisee.year && <span>{advisee.year}</span>}
                           </div>
-                          {advisee.currentPosition && (
-                            <p className="text-ufam-secondary">
-                              <span className="text-ufam-primary/70">
-                                {labels.currentPositionLabel}:
-                              </span>{' '}
-                              {advisee.currentPosition}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </FadeIn>
@@ -842,18 +839,25 @@ export default async function FacultyMemberPage({ params }: PageProps) {
             </FadeIn>
 
             <div className="space-y-6">
-              {member.awardsDistinctions?.map((award: any, index: number) => (
+              {member.awardsDistinctions?.map((award, index) => (
                 <FadeIn key={index} delay={index * 100}>
                   <div className="bg-ufam-bg p-6 rounded border border-white/5">
                     <div className="flex items-start gap-4">
                       <Trophy className="w-6 h-6 text-ufam-primary flex-shrink-0 mt-1" />
                       <div className="flex-1">
                         <h4 className="text-lg font-bold text-white mb-1">{award.title}</h4>
-                        <p className="text-sm text-ufam-secondary mb-2">
-                          {labels.issuerLabel}: {award.issuer}
-                        </p>
+                        {award.event && (
+                          <p className="text-sm text-ufam-secondary mb-2">
+                            {labels.issuerLabel}: {award.event}
+                          </p>
+                        )}
                         {award.year && (
                           <span className="text-xs text-ufam-primary">{award.year}</span>
+                        )}
+                        {award.description && (
+                          <p className="text-xs text-ufam-secondary mt-1 italic">
+                            {award.description}
+                          </p>
                         )}
                       </div>
                     </div>

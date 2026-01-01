@@ -409,7 +409,6 @@ export function flattenPartner(data: StrapiData<PartnerAttributes>): PartnerFlat
   return {
     id,
     name: attributes.name,
-    partnerType: type.name, // Mantém para retrocompatibilidade
     type,
     country: attributes.country,
     city: attributes.city,
@@ -1244,7 +1243,6 @@ export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat
     id,
     fullName: attributes.fullName,
     slug: attributes.slug,
-    degreeLevel: degree.name, // Retrocompatibilidade
     degree,
     thesisTitle: attributes.thesisTitle,
     advisor: attributes.advisor,
@@ -1252,7 +1250,6 @@ export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat
     currentPosition: attributes.currentPosition,
     currentInstitution: attributes.currentInstitution,
     researchTopic: attributes.researchTopic,
-    currentSector: sector?.name, // Retrocompatibilidade
     sector,
     linkedinUrl: attributes.linkedinUrl,
     lattesUrl: attributes.lattesUrl,
