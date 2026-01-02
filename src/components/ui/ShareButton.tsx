@@ -2,7 +2,12 @@
 
 import { Share2 } from 'lucide-react';
 
-export function ShareButton({ title }: { title: string }) {
+interface ShareButtonProps {
+  title: string;
+  label?: string;
+}
+
+export function ShareButton({ title, label = 'compartilhar' }: ShareButtonProps) {
   return (
     <button
       className="flex items-center gap-2 hover:text-ufam-primary transition-colors ml-auto"
@@ -16,7 +21,7 @@ export function ShareButton({ title }: { title: string }) {
       }}
     >
       <Share2 className="w-4 h-4" />
-      compartilhar
+      {label}
     </button>
   );
 }

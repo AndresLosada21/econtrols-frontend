@@ -287,7 +287,7 @@ export default async function Home() {
                             {alum.fullName}
                           </h4>
                           <span className="text-xs font-tech text-ufam-primary lowercase">
-                            {alum.degreeLevel} {alum.defenseYear && `• ${alum.defenseYear}`}
+                            {alum.degree?.name} {alum.defenseYear && `• ${alum.defenseYear}`}
                           </span>
                         </div>
                       </div>

@@ -488,33 +488,89 @@ export interface PartnerAttributes {
   city?: string;
   description?: string;
   collaborationType?: string;
+  collaborationArea?: string;
   websiteUrl?: string;
-  supportType?: string[];
+  startDate?: string;
+  jointPublications?: number;
   colorTheme?: string;
   isActive: boolean;
   displayOrder?: number;
   logo?: StrapiMedia;
+  collaborators?: StrapiResponse<StrapiData<CollaboratorAttributes>[]>;
+  projects?: StrapiResponse<StrapiData<ProjectAttributes>[]>;
+  fundedProjects?: any[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Partner extends StrapiData<PartnerAttributes> {}
 
+// Funded Project (componente aninhado em Partner)
+export interface FundedProjectAttributes {
+  projectTitle: string;
+  amount?: number;
+  year?: number;
+  grantNumber?: string;
+  description?: string;
+}
+
+export interface FundedProject {
+  id: number;
+  projectTitle: string;
+  amount?: number;
+  year?: number;
+  grantNumber?: string;
+  description?: string;
+}
+
 // Collaborator
 export interface CollaboratorAttributes {
   fullName: string;
-  institution: string;
-  country: string;
-  role?: string;
+  slug?: string;
+  title?: string;
+  position?: string;
+  collaborationType?: string;
+  researchArea?: string;
+  collaborationDescription?: string;
   email?: string;
   websiteUrl?: string;
+  googleScholarUrl?: string;
+  lattesUrl?: string;
+  orcidUrl?: string;
+  researchGateUrl?: string;
   isActive: boolean;
+  displayOrder?: number;
+  jointPublications?: number;
+  jointProjects?: number;
   photo?: StrapiMedia;
   createdAt: string;
   updatedAt: string;
+  publishedAt?: string;
 }
 
 export interface Collaborator extends StrapiData<CollaboratorAttributes> {}
+
+export interface CollaboratorFlat {
+  id: number;
+  fullName: string;
+  slug?: string;
+  title?: string;
+  position?: string;
+  collaborationType?: string;
+  researchArea?: string;
+  collaborationDescription?: string;
+  email?: string;
+  websiteUrl?: string;
+  googleScholarUrl?: string;
+  lattesUrl?: string;
+  orcidUrl?: string;
+  researchGateUrl?: string;
+  isActive: boolean;
+  displayOrder?: number;
+  jointPublications?: number;
+  jointProjects?: number;
+  photoUrl?: string;
+}
 
 // Degree Level (Dynamic Taxonomy)
 export interface DegreeLevelAttributes {
@@ -710,14 +766,60 @@ export interface ProjectsPageSetting {
   attributes: ProjectsPageSettingAttributes;
 }
 
+// People Page Components
+export interface PeopleSectionVisibility {
+  showHeader: boolean;
+  showRoleSections: boolean;
+  showAlumniSection: boolean;
+  showEmptyState: boolean;
+}
+
+export interface PeopleCardVisibility {
+  showPhoto: boolean;
+  showRole: boolean;
+  showSpecialization: boolean;
+  showMetrics: boolean;
+}
+
+export interface PeopleCardLabels {
+  hIndexLabel: string;
+  publicationsLabel: string;
+}
+
+export interface PeopleCardStyling {
+  cardBackgroundColor: string;
+  photoBorderColor: string;
+  photoPlaceholderGradientFrom: string;
+  photoPlaceholderGradientTo: string;
+  roleBadgeGradientFrom: string;
+  nameColor: string;
+  nameHoverColor: string;
+  specializationColor: string;
+  metricsColor: string;
+  metricsHighlightColor: string;
+}
+
+export interface PeopleAlumniSection {
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonLink: string;
+}
+
 // People Page Setting (Single Type)
 export interface PeoplePageSettingAttributes {
   pageTitle: string;
   pageDescription: string;
-  leadersSection?: LayoutSectionHeader;
-  researchersSection?: LayoutSectionHeader;
-  postdocsSection?: LayoutSectionHeader;
-  alumniSection?: LayoutSectionHeader;
+  emptyStateMessage: string;
+
+  // Componentes organizados
+  sectionVisibility?: PeopleSectionVisibility;
+  cardVisibility?: PeopleCardVisibility;
+  cardLabels?: PeopleCardLabels;
+  cardStyling?: PeopleCardStyling;
+  alumniSection?: PeopleAlumniSection;
+
+  // SEO
   seo?: SharedSeo;
   createdAt?: string;
   updatedAt?: string;
@@ -942,14 +1044,123 @@ export interface NewsDetailedPageSetting {
 }
 
 // Partners Page Setting (Single Type)
+// Partners Page Components
+export interface PartnersSectionVisibility {
+  showHeader: boolean;
+  showStats: boolean;
+  showPartnerSections: boolean;
+  showGlobalPresence: boolean;
+  showEmptyState: boolean;
+}
+
+export interface PartnersCardVisibility {
+  showLogo: boolean;
+  showDescription: boolean;
+  showLocation: boolean;
+  showCity: boolean;
+  showState: boolean;
+  showCountry: boolean;
+  showCollaborationType: boolean;
+  showCollaborationArea: boolean;
+  showStartDate: boolean;
+  showJointPublications: boolean;
+  showWebsiteLink: boolean;
+  showCollaborators: boolean;
+  showRelatedProjects: boolean;
+  showFundedProjects: boolean;
+  showCustomColorTheme: boolean;
+}
+
+export interface PartnersCardLabels {
+  collaborationTypeLabel: string;
+  collaborationAreaLabel: string;
+  startDateLabel: string;
+  publicationsLabel: string;
+  publicationLabel: string;
+  collaboratorsLabel: string;
+  projectsLabel: string;
+  fundedProjectsLabel: string;
+}
+
+export interface PartnersCardStyling {
+  cardBackgroundColor: string;
+  cardBorderColor: string;
+  cardHoverBorderColor: string;
+  titleColor: string;
+  titleHoverColor: string;
+  locationColor: string;
+  descriptionColor: string;
+  iconColor: string;
+  tagBackgroundColor: string;
+  tagTextColor: string;
+  customThemeGradientFrom: string;
+  customThemeGradientTo: string;
+}
+
+export interface PartnersStatsStyling {
+  statsLabelTotal: string;
+  statsLabelCountries: string;
+  statsTotalColor: string;
+  statsCountriesColor: string;
+  countryTagBackground: string;
+  countryTagBorder: string;
+  countryTagText: string;
+}
+
 export interface PartnersPageSettingAttributes {
   pageTitle: string;
   pageDescription?: string;
-  statsLabelTotal: string;
-  statsLabelCountries: string;
   globalPresenceTitle?: string;
   globalPresenceDescription?: string;
   emptyStateMessage: string;
+
+  // Component-based organization (new structure)
+  sectionVisibility?: PartnersSectionVisibility;
+  cardVisibility?: PartnersCardVisibility;
+  cardLabels?: PartnersCardLabels;
+  cardStyling?: PartnersCardStyling;
+  statsStyling?: PartnersStatsStyling;
+
+  // Legacy fields for backward compatibility (kept as optional)
+  statsLabelTotal?: string;
+  statsLabelCountries?: string;
+  showDescription?: boolean;
+  showState?: boolean;
+  showCity?: boolean;
+  showCollaborationType?: boolean;
+  showCollaborationArea?: boolean;
+  showStartDate?: boolean;
+  showJointPublications?: boolean;
+  showCustomColorTheme?: boolean;
+  showCollaborators?: boolean;
+  showRelatedProjects?: boolean;
+  showFundedProjects?: boolean;
+  collaborationTypeLabel?: string;
+  startDateLabel?: string;
+  collaborationAreaLabel?: string;
+  publicationsLabel?: string;
+  publicationLabel?: string;
+  collaboratorsLabel?: string;
+  projectsLabel?: string;
+  fundedProjectsLabel?: string;
+  cardBackgroundColor?: string;
+  cardBorderColor?: string;
+  cardHoverBorderColor?: string;
+  titleColor?: string;
+  titleHoverColor?: string;
+  locationColor?: string;
+  descriptionColor?: string;
+  iconColor?: string;
+  tagBackgroundColor?: string;
+  tagTextColor?: string;
+  statsTotalColor?: string;
+  statsCountriesColor?: string;
+  countryTagBackground?: string;
+  countryTagBorder?: string;
+  countryTagText?: string;
+  customThemeGradientFrom?: string;
+  customThemeGradientTo?: string;
+
   seo?: SharedSeo;
   createdAt: string;
   updatedAt: string;
@@ -988,25 +1199,6 @@ export interface HomepageSettingAttributes {
 
   // Campos mantidos/opcionais
   logo?: StrapiMedia;
-  partnerLogos?: {
-    data: Array<{
-      id: number;
-      attributes: {
-        name: string;
-        url: string;
-        alternativeText: string | null;
-        caption: string | null;
-        width: number;
-        height: number;
-        formats: {
-          thumbnail?: StrapiImageFormat;
-          small?: StrapiImageFormat;
-          medium?: StrapiImageFormat;
-          large?: StrapiImageFormat;
-        };
-      };
-    }>;
-  };
   defaultSeo?: SharedSeo;
   mainContactEmail?: string;
   phone?: string;
@@ -1346,11 +1538,23 @@ export interface PartnerFlat {
   /** Dynamic type from Strapi - taxonomia dinâmica */
   type: PartnerTypeFlat;
   country: string;
+  state?: string;
   city?: string;
+  description?: string;
+  collaborationType?: string;
+  collaborationArea?: string;
+  startDate?: string;
+  jointPublications?: number;
   websiteUrl?: string;
   colorTheme?: string;
   isActive: boolean;
   logoUrl?: string;
+  /** Colaboradores vinculados a este parceiro */
+  collaborators?: CollaboratorFlat[];
+  /** Projetos relacionados a este parceiro */
+  projects?: ProjectFlat[];
+  /** Projetos financiados por este parceiro */
+  fundedProjects?: FundedProject[];
 }
 
 // Partner Type Flat (for components)

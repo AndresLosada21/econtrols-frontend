@@ -174,7 +174,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
                 )}
 
                 {/* Share Button */}
-                <ShareButton title={news.title} />
+                <ShareButton title={news.title} label={labels.shareTitle} />
               </div>
             </FadeIn>
           </div>
@@ -221,6 +221,9 @@ export default async function NewsDetailPage({ params }: PageProps) {
                 <div className="mt-12 pt-8 border-t border-white/5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Tag className="w-4 h-4 text-ufam-primary" />
+                    <span className="text-ufam-secondary text-sm font-tech mr-2">
+                      {labels.tagsLabel}:
+                    </span>
                     {news.tags.map((tag: string, idx: number) => (
                       <span
                         key={idx}
@@ -245,7 +248,9 @@ export default async function NewsDetailPage({ params }: PageProps) {
               <h2 className="font-tech text-ufam-primary text-sm mb-2 tracking-widest lowercase">
                 {'/// mais noticias'}
               </h2>
-              <h3 className="text-2xl font-bold text-white font-tech mb-8">Leia Tambem</h3>
+              <h3 className="text-2xl font-bold text-white font-tech mb-8">
+                {labels.relatedTitle}
+              </h3>
             </FadeIn>
 
             <div className="grid md:grid-cols-3 gap-6">

@@ -66,6 +66,8 @@ import type {
   AlumnusFlat,
   DegreeLevelFlat,
   AlumniSectorFlat,
+  CollaboratorFlat,
+  FundedProject,
 } from '@/types/strapi';
 
 // ============================================
@@ -396,7 +398,7 @@ export function flattenPartner(data: StrapiData<PartnerAttributes>): PartnerFlat
     : {
         // Fallback para parceiros sem tipo definido (migração)
         id: 0,
-        name: attributes.partnerType || 'Sem Tipo',
+        name: 'Sem Tipo',
         slug: 'sem-tipo',
         sectionTitle: 'Outros Parceiros',
         description: '/// outros',
@@ -406,15 +408,87 @@ export function flattenPartner(data: StrapiData<PartnerAttributes>): PartnerFlat
         showInStats: false,
       };
 
+  // Flatten collaborators
+  const collaboratorsData = attributes.collaborators?.data;
+  const collaborators = collaboratorsData
+    ? collaboratorsData.map((item) => ({
+        id: item.id,
+        fullName: item.attributes.fullName,
+        slug: item.attributes.slug,
+        title: item.attributes.title,
+        position: item.attributes.position,
+        collaborationType: item.attributes.collaborationType,
+        researchArea: item.attributes.researchArea,
+        collaborationDescription: item.attributes.collaborationDescription,
+        email: item.attributes.email,
+        websiteUrl: item.attributes.websiteUrl,
+        googleScholarUrl: item.attributes.googleScholarUrl,
+        lattesUrl: item.attributes.lattesUrl,
+        orcidUrl: item.attributes.orcidUrl,
+        researchGateUrl: item.attributes.researchGateUrl,
+        isActive: item.attributes.isActive,
+        displayOrder: item.attributes.displayOrder,
+        jointPublications: item.attributes.jointPublications,
+        jointProjects: item.attributes.jointProjects,
+        photoUrl: getStrapiMediaUrl(item.attributes.photo?.data?.attributes?.url),
+      }))
+    : [];
+
+  // Flatten projects (simplificado para lista de links)
+  const projectsData = attributes.projects?.data;
+  const projects = projectsData
+    ? projectsData.map((item) => ({
+        id: item.id,
+        title: item.attributes.title,
+        slug: item.attributes.slug,
+        shortDescription: item.attributes.summary || item.attributes.shortDescription,
+        startDate: item.attributes.startDate,
+        endDate: item.attributes.endDate,
+        displayOrder: item.attributes.displayOrder,
+        showOnHomepage: item.attributes.showOnHomepage ?? false,
+        projectStatus: {
+          id: 0,
+          name: 'Ativo',
+          slug: 'ativo',
+          color: 'text-green-400',
+          displayOrder: 0,
+          isActive: true,
+        },
+      }))
+    : [];
+
+  // Flatten fundedProjects
+  const fundedProjectsData = attributes.fundedProjects;
+  const fundedProjects: FundedProject[] = fundedProjectsData
+    ? (fundedProjectsData as any[]).map((item, idx) => ({
+        id: idx,
+        projectTitle: item.projectTitle,
+        amount: item.amount,
+        year: item.year,
+        grantNumber: item.grantNumber,
+        description: item.description,
+      }))
+    : [];
+
   return {
     id,
     name: attributes.name,
     type,
     country: attributes.country,
+    state: attributes.state,
     city: attributes.city,
+    description: attributes.description,
+    collaborationType: attributes.collaborationType,
+    collaborationArea: attributes.collaborationArea,
+    startDate: attributes.startDate,
+    jointPublications: attributes.jointPublications,
     websiteUrl: attributes.websiteUrl,
+    colorTheme: attributes.colorTheme,
     isActive: attributes.isActive,
     logoUrl: getStrapiMediaUrl(attributes.logo?.data?.attributes?.url),
+    collaborators,
+    projects,
+    fundedProjects,
   };
 }
 
@@ -1099,7 +1173,17 @@ export async function getPartnerTypes(): Promise<PartnerTypeFlat[]> {
 
 export async function getPartners(options: FetchOptions = {}): Promise<PartnerFlat[]> {
   const response = await fetchAPI<StrapiResponse<StrapiData<PartnerAttributes>[]>>('partners', {
-    populate: ['logo', 'type'],
+    populate: {
+      logo: true,
+      type: true,
+      collaborators: {
+        populate: ['photo'],
+      },
+      projects: {
+        populate: ['featuredImage'],
+      },
+      fundedProjects: true,
+    },
     sort: ['displayOrder:asc', 'name:asc'],
     filters: { isActive: { $eq: true } },
     ...options,
@@ -1212,7 +1296,7 @@ export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat
     : {
         // Fallback para alumni sem degree definido (migração)
         id: 0,
-        name: attributes.degreeLevel || 'Não informado',
+        name: 'Não informado',
         slug: 'nao-informado',
         pluralName: 'Não informado',
         displayOrder: 999,
@@ -1229,15 +1313,7 @@ export function flattenAlumnus(data: StrapiData<AlumnusAttributes>): AlumnusFlat
         color: sectorData.attributes.color || 'text-gray-400',
         iconName: sectorData.attributes.iconName,
       }
-    : attributes.currentSector
-      ? {
-          // Fallback para alumni com currentSector antigo mas sem relation
-          id: 0,
-          name: attributes.currentSector,
-          statsLabel: `no setor ${attributes.currentSector.toLowerCase()}`,
-          color: 'text-gray-400',
-        }
-      : undefined;
+    : undefined;
 
   return {
     id,

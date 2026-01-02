@@ -40,7 +40,7 @@ export function AlumniList({ alumni }: AlumniListProps) {
   const sectors = useMemo(() => {
     const uniqueSectors = new Set<string>();
     alumni.forEach((a) => {
-      if (a.currentSector) uniqueSectors.add(a.currentSector);
+      if (a.sector?.name) uniqueSectors.add(a.sector.name);
     });
     return Array.from(uniqueSectors);
   }, [alumni]);

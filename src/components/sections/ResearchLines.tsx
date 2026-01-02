@@ -1,7 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Settings, Activity, Zap, Code2, Cpu, Brain, Shield } from 'lucide-react';
+import Link from 'next/link';
+import {
+  ArrowRight,
+  Settings,
+  Activity,
+  Zap,
+  Code2,
+  Cpu,
+  Brain,
+  Shield,
+  ArrowUpRight,
+} from 'lucide-react';
 import type { ResearchLineFlat } from '@/types/strapi';
 
 // Icon mapping for research lines (fallback when no image)
@@ -92,34 +103,35 @@ const fallbackResearchLines: ResearchLineFlat[] = [
 interface ResearchCardProps {
   title: string;
   description: string;
+  slug: string;
   imageUrl?: string;
   iconName?: string;
   index: number;
 }
 
-function ResearchCard({ title, description, imageUrl, iconName, index }: ResearchCardProps) {
-  // Determine icon: use iconName if provided, otherwise smart fallback based on title
+function ResearchCard({ title, description, slug, imageUrl, iconName, index }: ResearchCardProps) {
   const IconComponent = iconName
     ? iconMap[iconName] || getDefaultIcon(title)
     : getDefaultIcon(title);
 
   return (
-    <div className="w-[85vw] md:w-[500px] h-[50vh] bg-ufam-dark border border-white/10 relative flex flex-col justify-end hover:border-ufam-primary/50 transition-all group shrink-0 overflow-hidden">
+    <Link
+      href={`/research/${slug}`}
+      className="w-[85vw] md:w-[500px] h-[50vh] bg-ufam-dark border border-white/10 relative flex flex-col justify-end 
+                hover:border-ufam-primary/50 transition-all group shrink-0 overflow-hidden cursor-pointer"
+    >
       {/* Background: Image or Icon */}
       {imageUrl ? (
         <>
-          {/* Background Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500"
           />
-          {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-ufam-dark via-ufam-dark/80 to-transparent" />
         </>
       ) : (
-        /* Fallback: Icon in background */
         <div className="absolute top-8 right-8 text-white/10 group-hover:text-ufam-primary/20 transition-colors">
           <IconComponent className="w-16 h-16" />
         </div>
@@ -140,14 +152,23 @@ function ResearchCard({ title, description, imageUrl, iconName, index }: Researc
         <p className="text-ufam-secondary text-sm mb-4 leading-relaxed">{description}</p>
 
         {/* Divider */}
-        <div className="w-full h-[1px] bg-white/10 mb-4" />
+        <div className="w-full h-[1px] bg-white/10 mb-4 group-hover:bg-ufam-primary/30 transition-colors" />
 
-        {/* Area number */}
-        <span className="text-xs font-tech text-ufam-secondary lowercase">
-          area #{String(index + 1).padStart(2, '0')}
-        </span>
+        {/* Footer with click indicator */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-tech text-ufam-secondary lowercase">
+            area #{String(index + 1).padStart(2, '0')}
+          </span>
+          <span className="flex items-center gap-2 text-ufam-primary text-sm font-tech group-hover:text-ufam-light transition-colors">
+            explorar
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          </span>
+        </div>
       </div>
-    </div>
+
+      {/* Hover overlay effect */}
+      <div className="absolute inset-0 bg-ufam-primary/0 group-hover:bg-ufam-primary/10 transition-colors duration-300" />
+    </Link>
   );
 }
 
@@ -252,6 +273,7 @@ export default function ResearchLines({ researchLines }: ResearchLinesProps) {
               key={line.id}
               title={line.title}
               description={line.shortDescription || ''}
+              slug={line.slug || String(line.id)}
               imageUrl={line.imageUrl}
               iconName={line.iconName || line.icon}
               index={index}

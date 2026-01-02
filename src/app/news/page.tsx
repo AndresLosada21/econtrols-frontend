@@ -1,6 +1,7 @@
 import { getNewsItems, getNewsPageSettings, getStrapiMediaUrl } from '@/lib/strapi';
 import type { NewsItemFlat } from '@/types/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
+import { CategoryFilter } from '@/components/news/CategoryFilter';
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { Metadata } from 'next';
@@ -46,7 +47,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function NewsPage() {
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ categoria?: string }>;
+}) {
+  const params = await searchParams;
+  const selectedCategory = params.categoria || null;
+
   const [news, pageSettings] = await Promise.all([getNewsItems(), getNewsPageSettings()]);
 
   // Labels com fallback
@@ -63,11 +71,20 @@ export default async function NewsPage() {
   };
 
   // Get unique categories
-  const categories = [...new Set(news.map((n) => n.newsCategory?.name).filter(Boolean))];
+  const categories = [
+    ...new Set(news.map((n) => n.newsCategory?.name).filter(Boolean)),
+  ] as string[];
 
-  // Featured news (first 2)
-  const featuredNews = news.filter((n) => n.isFeatured).slice(0, 2);
-  const regularNews = news.filter((n) => !n.isFeatured || !featuredNews.includes(n));
+  // Filter news by selected category
+  const filteredNews = selectedCategory
+    ? news.filter((n) => n.newsCategory?.name === selectedCategory)
+    : news;
+
+  // Featured news (first 2) - only show if no category filter is active
+  const featuredNews = selectedCategory ? [] : filteredNews.filter((n) => n.isFeatured).slice(0, 2);
+  const regularNews = selectedCategory
+    ? filteredNews
+    : filteredNews.filter((n) => !n.isFeatured || !featuredNews.includes(n));
 
   return (
     <main className="min-h-screen bg-ufam-bg pt-24">
@@ -87,19 +104,11 @@ export default async function NewsPage() {
       {categories.length > 0 && (
         <section className="py-6 border-b border-white/5">
           <div className="container mx-auto px-6">
-            <div className="flex flex-wrap gap-2">
-              <span className="px-4 py-2 bg-ufam-primary text-white rounded text-sm font-tech lowercase">
-                todas
-              </span>
-              {categories.map((category) => (
-                <span
-                  key={category}
-                  className="px-4 py-2 bg-white/5 text-ufam-secondary rounded text-sm font-tech lowercase hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
+            <CategoryFilter
+              categories={categories}
+              categoriesLabel={labels.categoriesLabel}
+              allLabel="todas"
+            />
           </div>
         </section>
       )}
@@ -215,10 +224,10 @@ export default async function NewsPage() {
       )}
 
       {/* Empty State */}
-      {news.length === 0 && (
+      {filteredNews.length === 0 && (
         <section className="py-24">
           <div className="container mx-auto px-6 text-center">
-            <p className="text-ufam-secondary">Conecte ao Strapi para ver as notícias.</p>
+            <p className="text-ufam-secondary">{labels.emptyStateMessage}</p>
           </div>
         </section>
       )}
