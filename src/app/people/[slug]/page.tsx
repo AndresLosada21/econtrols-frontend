@@ -26,6 +26,8 @@ import {
   getStrapiMediaUrl,
 } from '@/lib/strapi';
 import { FadeIn } from '@/components/effects/FadeIn';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Social Icons
 function LinkedInIcon({ className }: { className?: string }) {
@@ -1069,8 +1071,11 @@ export default async function FacultyMemberPage({ params }: PageProps) {
                   <Globe className={`w-8 h-8 ${styles.iconColor} mb-4`} />
                   <div
                     className={`prose prose-invert max-w-none ${styles.textColor} leading-relaxed`}
-                    dangerouslySetInnerHTML={{ __html: member.internationalCollaborations! }}
-                  />
+                  >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {member.internationalCollaborations!}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </FadeIn>
             </div>
