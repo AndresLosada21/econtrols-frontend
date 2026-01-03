@@ -830,48 +830,110 @@ export interface PeoplePageSetting {
   attributes: PeoplePageSettingAttributes;
 }
 
-// People Detailed Page Setting (Single Type)
-export interface PeopleDetailedPageSettingAttributes {
+// People Detailed Page Components
+export interface PeopleDetailedVisibility {
+  showPhoto: boolean;
+  showRole: boolean;
+  showSpecialization: boolean;
+  showBio: boolean;
+  showMetrics: boolean;
+  showContact: boolean;
+  showSocialLinks: boolean;
+  showEducation: boolean;
+  showResearchLines: boolean;
+  showProjects: boolean;
+  showPublications: boolean;
+  showAdvisees: boolean;
+  showTeaching: boolean;
+  showAwards: boolean;
+  showInstitutionalPositions: boolean;
+  showCollaborations: boolean;
+}
+
+export interface PeopleDetailedLabels {
   backButtonText: string;
   bioLabel: string;
   bioTitle: string;
   contactsLabel: string;
-  contactsTitle: string;
   metricsLabel: string;
-  metricsTitle: string;
-  hIndexTooltip: string;
-  citationsLabel: string;
-  publicationsCountLabel: string;
   educationLabel: string;
   educationTitle: string;
   researchLinesLabel: string;
   researchLinesTitle: string;
   projectsLabel: string;
   projectsTitle: string;
-  coordinatedProjectsLabel: string;
-  participatingProjectsLabel: string;
   publicationsLabel: string;
   publicationsTitle: string;
-  publicationsEmptyState: string;
   adviseesLabel: string;
   adviseesTitle: string;
-  currentAdviseesLabel: string;
-  completedAdviseesLabel: string;
-  expectedDefenseLabel: string;
-  currentPositionLabel: string;
   teachingLabel: string;
   teachingTitle: string;
-  graduateCoursesLabel: string;
-  postgraduateCoursesLabel: string;
   awardsLabel: string;
   awardsTitle: string;
-  issuerLabel: string;
   institutionalLabel: string;
   institutionalTitle: string;
   collaborationsLabel: string;
   collaborationsTitle: string;
-  viewProfileLabel: string;
-  websiteLabel: string;
+}
+
+export interface PeopleDetailedStyling {
+  sectionBackground: string;
+  headerBackground: string;
+  labelColor: string;
+  titleColor: string;
+  textColor: string;
+  cardBackground: string;
+  cardBorder: string;
+  iconColor: string;
+}
+
+// People Detailed Page Setting (Single Type)
+export interface PeopleDetailedPageSettingAttributes {
+  visibility?: PeopleDetailedVisibility;
+  labels?: PeopleDetailedLabels;
+  styling?: PeopleDetailedStyling;
+
+  // Legacy fields for backward compatibility
+  backButtonText?: string;
+  bioLabel?: string;
+  bioTitle?: string;
+  contactsLabel?: string;
+  contactsTitle?: string;
+  metricsLabel?: string;
+  metricsTitle?: string;
+  hIndexTooltip?: string;
+  citationsLabel?: string;
+  publicationsCountLabel?: string;
+  educationLabel?: string;
+  educationTitle?: string;
+  researchLinesLabel?: string;
+  researchLinesTitle?: string;
+  projectsLabel?: string;
+  projectsTitle?: string;
+  coordinatedProjectsLabel?: string;
+  participatingProjectsLabel?: string;
+  publicationsLabel?: string;
+  publicationsTitle?: string;
+  publicationsEmptyState?: string;
+  adviseesLabel?: string;
+  adviseesTitle?: string;
+  currentAdviseesLabel?: string;
+  completedAdviseesLabel?: string;
+  expectedDefenseLabel?: string;
+  currentPositionLabel?: string;
+  teachingLabel?: string;
+  teachingTitle?: string;
+  graduateCoursesLabel?: string;
+  postgraduateCoursesLabel?: string;
+  awardsLabel?: string;
+  awardsTitle?: string;
+  issuerLabel?: string;
+  institutionalLabel?: string;
+  institutionalTitle?: string;
+  collaborationsLabel?: string;
+  collaborationsTitle?: string;
+  viewProfileLabel?: string;
+  websiteLabel?: string;
 }
 
 export interface PeopleDetailedPageSetting {
